@@ -80,11 +80,6 @@
       "bytes": 205
     },
     {
-      "path": "AI_DISCLOSURE.md",
-      "sha256": "324a7d8605c95fdc489367d77a70760e435dc247fe4da8ee20398615ec0a3257",
-      "bytes": 641
-    },
-    {
       "path": "data/processed/README.md",
       "sha256": "e00a348903141195895858df1db0ec0d715ee86753d1906089a1683b789d4df4",
       "bytes": 1168
@@ -126,8 +121,8 @@
     },
     {
       "path": "docs/RUBRIC_CROSSWALK.md",
-      "sha256": "59fbf7103a08b1f82414789061b0edc5dff7c6af4611b3962f8bcabfc13b3a0a",
-      "bytes": 2222
+      "sha256": "2d911e134d35f101a47e31b2ce7bbda559b98c463061e642f8fb017b65f6be29",
+      "bytes": 2190
     },
     {
       "path": "docs/SOURCES.md",
@@ -151,8 +146,8 @@
     },
     {
       "path": "make_manifest.py",
-      "sha256": "589d0f84c5b8c43e5f2bce5274c80034825c5aba443e2cb765277e21be0cf2ed",
-      "bytes": 4714
+      "sha256": "365586b885b90dce721c2e1c4f10eb05d44f3ca037faa51eb3f968e0f7e172fe",
+      "bytes": 4695
     },
     {
       "path": "processors/processor_A.json",
@@ -226,8 +221,8 @@
     },
     {
       "path": "scripts/build_public_export.py",
-      "sha256": "5ca3548a20b3cb4553c301f9c661f62270483824711a452108030b3cfe8975d0",
-      "bytes": 3123
+      "sha256": "e0c6ff739a7aa4075f42a73b0cb66e5218676178494d0b1358da07690afba572",
+      "bytes": 3104
     },
     {
       "path": "scripts/cleanroom_reproduce.py",
