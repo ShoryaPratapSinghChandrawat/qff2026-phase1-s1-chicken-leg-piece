@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 OUT=ROOT/'public'/'PS-S1_public_export'
-FIXED=['README.md','report.md','requirements.txt','main.ipynb','project_metadata.json','.gitignore','pytest.ini','make_manifest.py','make_figures.py']
+FIXED=['README.md','report.md','AI_DISCLOSURE.md','requirements.txt','main.ipynb','project_metadata.json','.gitignore','pytest.ini','make_manifest.py','make_figures.py']
 
 def selected_files():
     paths={ROOT/p for p in FIXED}

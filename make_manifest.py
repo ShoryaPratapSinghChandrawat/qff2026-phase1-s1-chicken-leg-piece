@@ -18,7 +18,7 @@ def notebook_digest(path):
     return hashlib.sha256(notebook_source_bytes(path)).hexdigest()
 def listed(patterns):
     return sorted({p for pattern in patterns for p in ROOT.glob(pattern) if p.is_file()})
-source=listed(["README.md","report.md","requirements.txt","main.ipynb","project_metadata.json","docs/*.md","data/**/*.md","data/raw/*.json","pytest.ini","src/*.py","tests/*.py","scripts/reproduce.py","scripts/render_docs.py","scripts/cleanroom_reproduce.py","scripts/build_public_export.py","scripts/run_e4_ansatz_patterns.py","scripts/make_e4_figures.py","processors/*.json","supplementary/e4_path_ring_star/*.json","run_*.py","make_figures.py","make_manifest.py",".github/workflows/*.yml",".gitignore"])
+source=listed(["README.md","report.md","AI_DISCLOSURE.md","requirements.txt","main.ipynb","project_metadata.json","docs/*.md","data/**/*.md","data/raw/*.json","pytest.ini","src/*.py","tests/*.py","scripts/reproduce.py","scripts/render_docs.py","scripts/cleanroom_reproduce.py","scripts/build_public_export.py","scripts/run_e4_ansatz_patterns.py","scripts/make_e4_figures.py","processors/*.json","supplementary/e4_path_ring_star/*.json","run_*.py","make_figures.py","make_manifest.py",".github/workflows/*.yml",".gitignore"])
 artifacts=listed(["results/raw/*.json","results/tables/*.csv","results/figures/*.png","results/logs/*.txt","results/supplementary/raw/*.json","results/supplementary/tables/*.csv","results/supplementary/figures/*.png","data/processed/*.csv"])
 packages=["numpy","scipy","pandas","matplotlib","networkx","qiskit","qiskit-aer","pytest","nbformat","nbconvert","ipykernel"]
 versions={}
