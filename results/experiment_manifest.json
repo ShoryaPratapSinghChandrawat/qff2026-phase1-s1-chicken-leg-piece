@@ -51,7 +51,7 @@
     }
   },
   "runtime": {
-    "python": "3.13.16",
+    "python": "3.13.15",
     "packages": {
       "numpy": "2.3.5",
       "scipy": "1.17.1",
@@ -66,7 +66,7 @@
       "ipykernel": "6.31.0"
     }
   },
-  "hash_semantics": "All paths are repository-relative. main.ipynb is hashed over canonical source and metadata, excluding execution outputs and execution counts; its bytes field is the canonical source representation length. Other files use raw SHA-256 and byte length.",
+  "hash_semantics": "All paths are repository-relative. main.ipynb is hashed over canonical source and metadata, excluding execution outputs and execution counts; its bytes field is the canonical source representation length. Other files use raw SHA-256 and byte length. results/experiment_manifest.json does not hash itself (self-exclusion); PUBLIC_EXPORT_SHA256SUMS.txt is intentionally excluded to prevent circular hash dependency (the checksum inventory covers the manifest).",
   "notebook_source_sha256": "797b2c18d41f4cf6380218f1725caa9f1df7d556c237fde8df4f404cd58b6c72",
   "input_files": [
     {
@@ -85,24 +85,19 @@
       "bytes": 641
     },
     {
-      "path": "README.md",
-      "sha256": "657ea7ee59f179290a165ae88ff2a1415c4d7eff4df48d068125cac93680cf2f",
-      "bytes": 15813
-    },
-    {
       "path": "data/processed/README.md",
       "sha256": "e00a348903141195895858df1db0ec0d715ee86753d1906089a1683b789d4df4",
       "bytes": 1168
     },
     {
-      "path": "data/raw/README.md",
-      "sha256": "df546ce9f46a81908684528a3df47637e600e88d3bbed80d6acb8e7010b5cb00",
-      "bytes": 247
-    },
-    {
       "path": "data/raw/hamiltonian_s1.json",
       "sha256": "13a76e58722ca763cde19b9d840b66e97dde231240656c39c6b484d2b04a6c30",
       "bytes": 826
+    },
+    {
+      "path": "data/raw/README.md",
+      "sha256": "df546ce9f46a81908684528a3df47637e600e88d3bbed80d6acb8e7010b5cb00",
+      "bytes": 247
     },
     {
       "path": "docs/CLEAN_REPRODUCTION.md",
@@ -156,8 +151,8 @@
     },
     {
       "path": "make_manifest.py",
-      "sha256": "d705dfa76eeed69a2de7e3dd92354c194eb13d317931ee3cf90807f026b6579f",
-      "bytes": 4434
+      "sha256": "589d0f84c5b8c43e5f2bce5274c80034825c5aba443e2cb765277e21be0cf2ed",
+      "bytes": 4714
     },
     {
       "path": "processors/processor_A.json",
@@ -180,9 +175,14 @@
       "bytes": 27
     },
     {
+      "path": "README.md",
+      "sha256": "88d790fa8bf7d3e2d83c93348489f13ef57657d8f3c3f6dcedd5c6a2c0cdd553",
+      "bytes": 15993
+    },
+    {
       "path": "report.md",
-      "sha256": "fe886f12343881a73318ff25a4726743453b68432b832231598beabd81616683",
-      "bytes": 6051
+      "sha256": "92cec89fbe60b30745c1208a4bc69c50da1eb17c5e34793b6c8c3aa24a80f226",
+      "bytes": 12453
     },
     {
       "path": "requirements.txt",
@@ -196,8 +196,8 @@
     },
     {
       "path": "run_benchmark.py",
-      "sha256": "88ac511789c41469742299ae557bb999112e2255e9e99186b5ccb6616af8c3a9",
-      "bytes": 10652
+      "sha256": "4223954d9de3483bcd1168a66c4ca916dec2e85d846db7c36f40484a0fca74da",
+      "bytes": 10721
     },
     {
       "path": "run_exact_validation.py",
@@ -226,8 +226,8 @@
     },
     {
       "path": "scripts/build_public_export.py",
-      "sha256": "077548e2ea678a2c1336c9969bd8f78f3dcfd99066d6677c601259910db230b7",
-      "bytes": 2988
+      "sha256": "5ca3548a20b3cb4553c301f9c661f62270483824711a452108030b3cfe8975d0",
+      "bytes": 3123
     },
     {
       "path": "scripts/cleanroom_reproduce.py",
@@ -241,8 +241,8 @@
     },
     {
       "path": "scripts/render_docs.py",
-      "sha256": "3a2d8752f3f35962b2c4d7903b3f71220c70d0b564eef4febbe417b7916cbd7b",
-      "bytes": 22107
+      "sha256": "c291a7b5f28945d4ea31f3366e2a9882bf79653e0f5f4bc4dbcf60f3fb87dc34",
+      "bytes": 28762
     },
     {
       "path": "scripts/reproduce.py",
@@ -330,6 +330,21 @@
       "bytes": 3630
     },
     {
+      "path": "supplementary/e4_path_ring_star/path4.json",
+      "sha256": "6f1b718e86b91f0db0494d9f30bf8503dd7663970ff22c28b60d6576c1d3a2cd",
+      "bytes": 288
+    },
+    {
+      "path": "supplementary/e4_path_ring_star/ring4.json",
+      "sha256": "32a84a87a72c1f49056dfe641ce106923c37574bb5255c2e8fb165c6c82679ac",
+      "bytes": 294
+    },
+    {
+      "path": "supplementary/e4_path_ring_star/star4.json",
+      "sha256": "dadb1beb75f711a9099325fa5d8ebb9b991746997567185c4ed7ce53df1c44c2",
+      "bytes": 288
+    },
+    {
       "path": "tests/conftest.py",
       "sha256": "61d917466d000f076e8c5ed631cbc461fbb128df7dc8b8dfc89aed11143b7a1e",
       "bytes": 97
@@ -371,8 +386,8 @@
     },
     {
       "path": "tests/test_manifest.py",
-      "sha256": "e09780834e4cbf1d076d06b5e00f65c144bf609a98b48088c5afc091fff9270f",
-      "bytes": 2382
+      "sha256": "df98a2b1f197f1701bb1787109bb8e8a38e8cf6caf8ae66955fa1f8bd5fbd315",
+      "bytes": 4374
     },
     {
       "path": "tests/test_measurement_estimators.py",

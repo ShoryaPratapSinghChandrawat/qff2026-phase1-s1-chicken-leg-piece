@@ -176,6 +176,7 @@ The default notebook intentionally does not invoke the E4 runner, the historical
 ## Key files
 
 - `main.ipynb`: executable analysis and visible result tables/figures.
+- `report.md`: canonical Markdown report at repository root, presenting the verified Phase 1 A/B benchmark analysis and the clearly separated proposed Processor D design ideology.
 - `src/problem.py`, `src/ansatz.py`, `src/vqe.py`: model, ansatz and optimizer. `make_ansatz` retains its historical default of two repetitions; the canonical workflow explicitly uses three.
 - `src/routing.py`, `src/metrics.py`, `src/visualization.py`: evidence-based compilation, metrics and plots.
 - `data/raw/hamiltonian_s1.json`: source-verified model inputs; not a substitute for missing source documents.

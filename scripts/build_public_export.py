@@ -31,7 +31,9 @@ def main():
     for path in sorted((p for p in OUT.rglob('*') if p.is_file()),key=lambda p:p.relative_to(OUT).as_posix()):
         digest=hashlib.sha256(path.read_bytes()).hexdigest()
         sums.append(f'{digest}  {path.relative_to(OUT).as_posix()}')
-    (OUT/'PUBLIC_EXPORT_SHA256SUMS.txt').write_text('\n'.join(sums)+'\n',encoding='utf-8')
+    sums_text = '\n'.join(sums) + '\n'
+    (ROOT/'PUBLIC_EXPORT_SHA256SUMS.txt').write_text(sums_text,encoding='utf-8',newline='\n')
+    (OUT/'PUBLIC_EXPORT_SHA256SUMS.txt').write_text(sums_text,encoding='utf-8',newline='\n')
     archive=ROOT/'public'/'PS-S1_public.zip'
     archive.parent.mkdir(parents=True,exist_ok=True)
     with zipfile.ZipFile(archive,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:

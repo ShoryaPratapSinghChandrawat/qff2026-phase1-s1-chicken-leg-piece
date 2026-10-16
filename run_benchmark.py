@@ -131,13 +131,14 @@ def main():
     table=ROOT/'results/tables/ideal_architecture_results.csv'
     rawfile=ROOT/'results/raw/vqe_runs.json'
     pd.DataFrame(rows).to_csv(table,index=False,float_format='%.16g')
-    rawfile.write_text(json.dumps(raw,indent=2)+'\n')
+    rawfile.write_text(json.dumps(raw,indent=2)+'\n',encoding='utf-8',newline='\n')
     baseline=next(run for run in raw if run['g']==1.0 and run['seed']==42)
     logical=make_ansatz(baseline['result']['parameters'],reps=baseline['result']['reps'])
     logical_text=logical.draw(output='text').__str__()
     (ROOT/'results/logs/circuit_comparison.txt').write_text(
         'Logical circuit (g=1, VQE seed=42):\n'+logical_text+
-        '\n\nCompiled details and actual pass evidence are in ideal_architecture_results.csv and raw JSON.\n')
+        '\n\nCompiled details and actual pass evidence are in ideal_architecture_results.csv and raw JSON.\n',
+        encoding='utf-8',newline='\n')
     df=pd.DataFrame(rows)
     print(f'Finished {len(raw)} principal VQE starts and {len(rows)} ideal result rows.')
     print('Actual optimizer classifications:')

@@ -34,3 +34,38 @@ def test_manifest_regenerates_in_a_clean_filesystem_copy(tmp_path):
     copy=tmp_path/'project-copy';shutil.copytree(ROOT,copy,ignore=shutil.ignore_patterns('.venv','__pycache__','.pytest_cache','*.pyc'))
     subprocess.run([sys.executable,str(copy/'make_manifest.py')],cwd=copy,check=True,capture_output=True,text=True)
     assert (copy/'results/experiment_manifest.json').read_bytes()==(ROOT/'results/experiment_manifest.json').read_bytes()
+
+def test_manifest_coverage_and_intentional_exclusions():
+    m = json.loads((ROOT / 'results/experiment_manifest.json').read_text(encoding='utf-8'))
+    manifest_paths = {item['path'] for item in m['input_files'] + m['generated_artifacts']}
+    
+    # 1. Self-exclusion policy: manifest does not hash itself
+    assert 'results/experiment_manifest.json' not in manifest_paths
+    
+    # 2. Circular dependency exclusion policy: PUBLIC_EXPORT_SHA256SUMS.txt is excluded from manifest
+    assert 'PUBLIC_EXPORT_SHA256SUMS.txt' not in manifest_paths
+    
+    # 3. Read the intended public checksum list
+    checksum_file = ROOT / 'PUBLIC_EXPORT_SHA256SUMS.txt'
+    assert checksum_file.is_file()
+    checksum_lines = [line.strip().split(None, 1) for line in checksum_file.read_text(encoding='utf-8').splitlines() if line.strip()]
+    checksum_paths = {parts[1] for parts in checksum_lines}
+    
+    # Checksum file must cover manifest
+    assert 'results/experiment_manifest.json' in checksum_paths
+    # Checksum file must exclude only itself
+    assert 'PUBLIC_EXPORT_SHA256SUMS.txt' not in checksum_paths
+    
+    # 4. Complete coverage assertion: every file in checksum list (except manifest itself) must be in manifest
+    uncovered_in_manifest = (checksum_paths - {'results/experiment_manifest.json'}) - manifest_paths
+    assert not uncovered_in_manifest, f"Public files missing from manifest: {uncovered_in_manifest}"
+    
+    # Manifest must not list files outside the checksum list
+    extra_in_manifest = manifest_paths - checksum_paths
+    assert not extra_in_manifest, f"Manifest files missing from public checksums: {extra_in_manifest}"
+    
+    # 5. Verify the 3 supplementary topology definitions are in input_files
+    input_paths = {item['path'] for item in m['input_files']}
+    for name in ('path4.json', 'ring4.json', 'star4.json'):
+        expected = f'supplementary/e4_path_ring_star/{name}'
+        assert expected in input_paths, f"Missing {expected} from input_files"
