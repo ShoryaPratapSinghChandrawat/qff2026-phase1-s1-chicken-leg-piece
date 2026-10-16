@@ -1,3 +1,0 @@
-# AI assistance disclosure
-
-An AI assistant was used to inspect supplied project files and organizer-document text, review the existing Python/notebook workflow, propose and implement edits in a separate release copy, write/update tests and documentation, and help interpret local simulation/test output. The assistant did not access an organizer portal, select a problem in an account, contact organizers, run quantum hardware, publish code, or submit the project. Team members must review every change and confirm authorship/AI-use policy requirements with the organizer; this disclosure is not a claim that any policy has been satisfied.
