@@ -176,13 +176,13 @@
     },
     {
       "path": "README.md",
-      "sha256": "88d790fa8bf7d3e2d83c93348489f13ef57657d8f3c3f6dcedd5c6a2c0cdd553",
-      "bytes": 15993
+      "sha256": "ef4c571df9a9ba92637c0fe03ea588f63e80efdef179791f4c3aa9dccc2bd5b6",
+      "bytes": 16229
     },
     {
       "path": "report.md",
-      "sha256": "92cec89fbe60b30745c1208a4bc69c50da1eb17c5e34793b6c8c3aa24a80f226",
-      "bytes": 12453
+      "sha256": "e60c486195c5e0d7fb6450c0c75d21a9f48fafce0556333851808090dcb1550f",
+      "bytes": 12575
     },
     {
       "path": "requirements.txt",
@@ -241,8 +241,8 @@
     },
     {
       "path": "scripts/render_docs.py",
-      "sha256": "c291a7b5f28945d4ea31f3366e2a9882bf79653e0f5f4bc4dbcf60f3fb87dc34",
-      "bytes": 28762
+      "sha256": "97efb3412a7cc14fd400aec7948648a16989aaa5c81cfd266f06efb32cfab905",
+      "bytes": 29120
     },
     {
       "path": "scripts/reproduce.py",
@@ -406,8 +406,8 @@
     },
     {
       "path": "tests/test_notebook_pipeline.py",
-      "sha256": "2181630769692f8c375952143ee807911b1facc7ff35bf18ef318409adb2723f",
-      "bytes": 1342
+      "sha256": "51b452ca2caca957acb8b43fff6e2ee5fb6d1c0687970c23c8a29d2bc0e79ddf",
+      "bytes": 2916
     },
     {
       "path": "tests/test_qiskit_architecture.py",

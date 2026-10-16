@@ -3,7 +3,7 @@
 **Qiskit Fall Fest 2026 · Phase 1 · SRM University-AP**  
 **Team Chicken Leg Piece:** Swarup · Biswajit · Arhaan Sethi · Shorya Pratap Singh Chandrawat (submitting lead as recorded in project metadata).
 
-This repository records a reproducible local simulation study of the four-site open transverse-field Ising model. All reported hardware-architecture outcomes are simulations under the declared synthetic noise model; no quantum hardware was run. No external submission, publication, or push was performed by this workflow. No license is added because member approval was not established.
+This repository records a reproducible local simulation study of the four-site open transverse-field Ising model. All reported hardware-architecture outcomes are simulations under the declared synthetic noise model; no quantum hardware was run. This repository is publicly hosted on GitHub for project sharing; the local simulation workflow did not submit to the hackathon portal, and portal submission is not claimed unless confirmed by the team. No license is added because member approval was not established.
 
 ## Main result
 
@@ -34,7 +34,7 @@ The October 14, 2026 Master Challenge Guide (page 5) specifies the open four-sit
 
 The table reports raw optimizer success separately from the project energy tolerance. The tolerance is a project reporting convention, not an organizer mandate.
 
-| g | init seed | VQE energy | exact energy | |error| | optimizer success | termination |
+| g | init seed | VQE energy | exact energy | Absolute error | optimizer success | termination |
 | --- | --- | --- | --- | --- | --- | --- |
 | 0.5 | 7 | -3.42703 | -3.42703 | 1.33582e-12 | 1 | CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH |
 | 0.5 | 21 | -3.42703 | -3.42703 | 2.03393e-13 | 1 | CONVERGENCE: RELATIVE REDUCTION OF F <= FACTR*EPSMCH |
@@ -186,4 +186,4 @@ The default notebook intentionally does not invoke the E4 runner, the historical
 
 ## Scope and limitations
 
-No hardware execution, portal access, organizer contact, team/problem selection check, submission, publication, or push is claimed. The separate AI policy referenced by the instructions was not supplied; contributors must confirm the applicable policy. No license is included because explicit approval from all four members was not obtained. The supplied source ZIP and `Problem_Statment_Details.pdf` were absent from the available workspace; the private handoff records this provenance limitation. No ZIP-based extraction or checksum comparison is claimed.
+This repository is publicly hosted on GitHub. No hardware execution, portal access, organizer contact, team/problem selection check, or hackathon portal submission is claimed; the local workflow did not submit to the hackathon portal. The separate AI policy referenced by the instructions was not supplied; contributors must confirm the applicable policy. No license is included because explicit approval from all four members was not obtained. The supplied source ZIP and `Problem_Statment_Details.pdf` were absent from the available workspace; the private handoff records this provenance limitation. No ZIP-based extraction or checksum comparison is claimed.
