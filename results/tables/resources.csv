@@ -1,0 +1,10 @@
+ps,circuit_label,processor,executable,logical_qubits,physical_qubits,logical_2q,two_q,depth,two_q_depth,swaps,routing_overhead_2q
+PS-S1,s1_hva_g1.00_L3_best_seed2_cx,A,True,4,5,18,18,36,12,0,0
+PS-S1,s1_hva_g1.00_L3_best_seed2_rzz,A,True,4,5,18,18,36,12,0,0
+PS-S1,s1_hva_g1.00_L3_best_seed2_cx,B,True,4,9,18,18,36,12,0,0
+PS-S1,s1_hva_g1.00_L3_best_seed2_rzz,B,True,4,9,18,18,36,12,0,0
+PS-S1,s1_hva_g1.00_L3_best_seed2_cx,D,True,4,6,18,18,58,12,0,0
+PS-S1,s1_hva_g1.00_L3_best_seed2_rzz,D,True,4,6,9,9,24,6,0,0
+PS-S1,bell_auto_layout_ZZ,A,True,2,5,1,1,4,1,0,0
+PS-S1,bell_auto_layout_ZZ,B,True,2,9,1,1,4,1,0,0
+PS-S1,bell_auto_layout_ZZ,D,True,2,6,1,1,7,1,0,0

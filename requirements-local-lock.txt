@@ -1,0 +1,14 @@
+# Captured dedicated Phase 2 environment; simulation stack matches the official requirements.
+# Python runtime: 3.13.16
+qiskit==1.4.6
+qiskit-aer==0.18.0
+numpy==2.4.6
+scipy==1.17.1
+matplotlib==3.11.2
+notebook==7.6.3
+nbconvert==7.17.2
+ipykernel==7.4.0
+# Additional test runner installed in this dedicated venv (not required for the simulation/notebook).
+pytest==9.2.0
+pluggy==1.7.0
+iniconfig==2.3.1

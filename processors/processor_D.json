@@ -1,0 +1,48 @@
+{
+  "name": "Processor D",
+  "team": "Chicken Leg Piece",
+  "problem_statement": "PS-S1",
+  "num_qubits": 6,
+  "edges": [
+    [
+      0,
+      1
+    ],
+    [
+      0,
+      3
+    ],
+    [
+      0,
+      5
+    ],
+    [
+      1,
+      2
+    ],
+    [
+      2,
+      3
+    ],
+    [
+      3,
+      4
+    ],
+    [
+      4,
+      5
+    ]
+  ],
+  "basis_gates": [
+    "rz",
+    "sx",
+    "x",
+    "rzz"
+  ],
+  "error_rates": {
+    "p1": 0.001,
+    "p2": 0.005,
+    "p_readout": 0.01
+  },
+  "justification": "The measured bottleneck is the two-qubit gate count of the ZZ interaction, not routing: Processors A and B both compile the open-chain HVA with 0 routing SWAPs. At N=4,L=2, their CX-RZ-CX ZZ construction uses 12 two-qubit gates, while this native-RZZ design uses 6; for the selected N=4,L=3 circuit the corresponding counts are 18 versus 9. The RZZ basis directly represents each ZZ interaction and halves its modeled two-qubit gate locations without claiming lower error per gate. Rates p1=0.001, p2=0.005, and p_readout=0.01 equal the official minimum allowed synthetic rates; the model assigns RZZ the same p2 as CX/CZ. The six-qubit chorded ring has seven edges, diameter 3, and passes the official 4- and 6-qubit checks. This resource trade-off is not calibrated device evidence and does not model gate-family variation, crosstalk, drift, leakage, or correlated readout."
+}
