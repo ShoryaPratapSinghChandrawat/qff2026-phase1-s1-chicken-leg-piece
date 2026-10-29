@@ -1,0 +1,16 @@
+scope,circuit_label,N,g,layers,seed,selection_status,processor,zz_mode,executable,reason,logical_qubits,physical_qubits,logical_2q,two_q,depth,two_q_depth,swaps,routing_overhead_2q,selected_energy_error,optimizer_success
+"additional, not part of the official required results",n6_optional_capacity_check,6,all,N/A,N/A,processor_capacity,A,N/A,False,"not executable: needs 6 qubits, has 5",6,5,NA,NA,NA,NA,NA,NA,NA,NA
+"additional, not part of the official required results",n6_hva_g0.25_L8_best_seed1_cx,6,0.25,8,1,first_threshold_layer,B,cx,True,,6,9,80,80,91,32,0,0,0.0006930754981429033,True
+"additional, not part of the official required results",n6_hva_g0.25_L8_best_seed1_rzz,6,0.25,8,1,first_threshold_layer,D,rzz,True,,6,6,40,40,59,16,0,0,0.0006930754981429033,True
+"additional, not part of the official required results",n6_hva_g0.50_L8_best_seed1_cx,6,0.5,8,1,best_available_threshold_not_reached,B,cx,True,,6,9,80,80,91,32,0,0,0.0023816061291528356,False
+"additional, not part of the official required results",n6_hva_g0.50_L8_best_seed1_rzz,6,0.5,8,1,best_available_threshold_not_reached,D,rzz,True,,6,6,40,40,59,16,0,0,0.0023816061291528356,False
+"additional, not part of the official required results",n6_hva_g0.75_L8_best_seed2_cx,6,0.75,8,2,best_available_threshold_not_reached,B,cx,True,,6,9,80,80,91,32,0,0,0.009126312783711121,False
+"additional, not part of the official required results",n6_hva_g0.75_L8_best_seed2_rzz,6,0.75,8,2,best_available_threshold_not_reached,D,rzz,True,,6,6,40,40,59,16,0,0,0.009126312783711121,False
+"additional, not part of the official required results",n6_hva_g1.00_L8_best_seed2_cx,6,1.0,8,2,best_available_threshold_not_reached,B,cx,True,,6,9,80,80,91,32,0,0,0.0035814945918657415,False
+"additional, not part of the official required results",n6_hva_g1.00_L8_best_seed2_rzz,6,1.0,8,2,best_available_threshold_not_reached,D,rzz,True,,6,6,40,40,59,16,0,0,0.0035814945918657415,False
+"additional, not part of the official required results",n6_hva_g1.25_L8_best_seed0_cx,6,1.25,8,0,first_threshold_layer,B,cx,True,,6,9,80,80,91,32,0,0,0.0008801149224346716,False
+"additional, not part of the official required results",n6_hva_g1.25_L8_best_seed0_rzz,6,1.25,8,0,first_threshold_layer,D,rzz,True,,6,6,40,40,59,16,0,0,0.0008801149224346716,False
+"additional, not part of the official required results",n6_hva_g1.50_L5_best_seed1_cx,6,1.5,5,1,first_threshold_layer,B,cx,True,,6,9,50,50,58,20,0,0,0.0006924114797826064,True
+"additional, not part of the official required results",n6_hva_g1.50_L5_best_seed1_rzz,6,1.5,5,1,first_threshold_layer,D,rzz,True,,6,6,25,25,38,10,0,0,0.0006924114797826064,True
+"additional, not part of the official required results",n6_hva_g2.00_L4_best_seed2_cx,6,2.0,4,2,first_threshold_layer,B,cx,True,,6,9,40,40,47,16,0,0,0.0005466789073960143,True
+"additional, not part of the official required results",n6_hva_g2.00_L4_best_seed2_rzz,6,2.0,4,2,first_threshold_layer,D,rzz,True,,6,6,20,20,31,8,0,0,0.0005466789073960143,True

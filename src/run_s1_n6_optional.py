@@ -8,6 +8,9 @@ from __future__ import annotations
 import csv, json, math, sys, time
 from pathlib import Path
 import numpy as np
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 from scipy.optimize import minimize
 from qiskit.quantum_info import SparsePauliOp, Statevector, state_fidelity
 ROOT=Path(__file__).resolve().parents[1]
@@ -15,7 +18,7 @@ sys.path.insert(0,str(ROOT))
 import qff_sim as sim
 GS=[0.25,0.50,0.75,1.00,1.25,1.50,2.00]
 SEEDS=[0,1,2]
-LAYERS=range(1,5)
+LAYERS=range(1,9)
 OPTIONS={"maxiter":250,"maxfun":30000,"ftol":1e-12,"gtol":1e-7}
 OUT=ROOT/'results/additional'
 RAW=OUT/'s1_n6_seed_runs.csv'
@@ -73,7 +76,80 @@ def main():
     write(AGG,list(ag[0]),ag);write(LAYER,list(lr[0]),lr)
     failed=[r for r in done.values() if str(r['success']).lower() not in ('true','1')]
     print(f'OPTIONAL N=6 sweep complete: raw={len(done)} aggregates={len(ag)} layer_rows={len(lr)} failed_starts_retained={len(failed)} total_optimizer_seconds={sum(float(r["runtime_seconds"]) for r in done.values()):.2f}',flush=True)
+    minimal=[]
+    resource_rows=[]
+    p_b=sim.PROCESSOR_B
+    p_d=sim.load_processor(str(ROOT/'processors/processor_D.json'))
     for g in GS:
-        ps=[int(r['layers']) for r in lr if float(r['g'])==g and float(r['abs_energy_err'])<1e-3]
-        print(f'N6 g={g:.2f}: smallest L <1e-3 = {min(ps) if ps else "NOT REACHED L<=4"}')
+        layer_rows=[r for r in lr if float(r['g'])==g]
+        passing=[r for r in layer_rows if float(r['abs_energy_err'])<1e-3]
+        if passing:
+            chosen_layer=min(int(r['layers']) for r in passing)
+            candidates=[done[(g,chosen_layer,seed)] for seed in SEEDS]
+            winner=min(candidates,key=lambda r:float(r['energy']))
+            role='first_threshold_layer'
+            min_field=chosen_layer
+        else:
+            winner=min((r for key,r in done.items() if key[0]==g),key=lambda r:abs(float(r['energy_err'])))
+            chosen_layer=int(winner['layers'])
+            role='best_available_threshold_not_reached'
+            min_field='NOT_REACHED_L<=8'
+        chosen_seed=int(winner['seed'])
+        selected_error=float(winner['energy_err'])
+        selected_success=str(winner['success']).lower() in ('true','1')
+        at_layer=[done[(g,chosen_layer,seed)] for seed in SEEDS]
+        minimal.append({
+            'scope':'additional, not part of the official required results',
+            'N':6,'g':g,'minimal_L_abs_err_lt_1e-3':min_field,
+            'threshold_met_within_L1_to_L8':bool(passing),'selected_seed':chosen_seed,
+            'selected_L':chosen_layer,'selected_energy_error':selected_error,
+            'selected_optimizer_success':selected_success,
+            'failed_starts_at_selected_L':sum(str(r['success']).lower() not in ('true','1') for r in at_layer),
+            'selection_rule':'lowest L meeting strict threshold; best energy among its seeds; otherwise smallest absolute error over L=1..8 and seeds 0..2'
+        })
+        print(f'N6 g={g:.2f}: smallest L <1e-3 = {min_field}; selected seed={chosen_seed} success={selected_success}')
+        for proc,mode in ((p_b,'cx'),(p_d,'rzz')):
+            qc,params=sim.hva_ansatz(6,chosen_layer,zz_mode=mode)
+            bound=qc.assign_parameters(dict(zip(params,json.loads(winner['theta_json']))))
+            metrics=sim.circuit_metrics(bound,proc)
+            if not metrics.get('executable'):
+                raise RuntimeError(f'Processor {proc["name"]} cannot compile selected N=6 circuit for g={g}')
+            resource_rows.append({
+                'scope':'additional, not part of the official required results',
+                'circuit_label':f'n6_hva_g{g:.2f}_L{chosen_layer}_best_seed{chosen_seed}_{mode}',
+                'N':6,'g':g,'layers':chosen_layer,'seed':chosen_seed,
+                'selection_status':role,'processor':proc['name'][-1],'zz_mode':mode,
+                'executable':True,'reason':'','logical_qubits':metrics['logical_qubits'],
+                'physical_qubits':metrics['physical_qubits'],'logical_2q':metrics['logical_cx'],
+                'two_q':metrics['cx'],'depth':metrics['depth'],'two_q_depth':metrics['two_q_depth'],
+                'swaps':metrics['swaps'],'routing_overhead_2q':metrics['cx_overhead'],
+                'selected_energy_error':selected_error,'optimizer_success':selected_success
+            })
+    minimal_cols=list(minimal[0])
+    write(OUT/'s1_n6_minimal_layers.csv',minimal_cols,minimal)
+    capacity={
+        'scope':'additional, not part of the official required results',
+        'circuit_label':'n6_optional_capacity_check','N':6,'g':'all','layers':'N/A','seed':'N/A',
+        'selection_status':'processor_capacity','processor':'A','zz_mode':'N/A','executable':False,
+        'reason':'not executable: needs 6 qubits, has 5','logical_qubits':6,'physical_qubits':5,
+        'logical_2q':'NA','two_q':'NA','depth':'NA','two_q_depth':'NA','swaps':'NA',
+        'routing_overhead_2q':'NA','selected_energy_error':'NA','optimizer_success':'NA'
+    }
+    resource_rows.insert(0,capacity)
+    resource_cols=list(resource_rows[0])
+    write(OUT/'s1_n6_resources.csv',resource_cols,resource_rows)
+    fig,ax=plt.subplots(figsize=(9,5.5),constrained_layout=True)
+    for g in GS:
+        rr=sorted((r for r in lr if float(r['g'])==g),key=lambda r:int(r['layers']))
+        ys=[max(float(r['abs_energy_err']),1e-16) for r in rr]
+        ax.plot([int(r['layers']) for r in rr],ys,marker='o',label=f'g={g:g}')
+    ax.axhline(1e-3,color='black',linestyle='--',linewidth=1,label='strict threshold 1e-3')
+    ax.set_yscale('log');ax.set_xticks(list(LAYERS))
+    ax.set(xlabel='HVA layers L (N=6)',ylabel='Absolute energy error',
+        title='Additional, not part of the official required results: N=6 VQE layer study (seeds 0,1,2)')
+    ax.grid(True,which='both',alpha=.25);ax.legend(ncol=2,fontsize=8)
+    fig.savefig(ROOT/'results/figures/additional_n6_layer_study.png',dpi=300)
+    plt.close(fig)
+    print(f'ADDITIONAL N=6 resources: B/D rows={len(resource_rows)-1}; Processor A: {capacity["reason"]}')
+    print(f'ADDITIONAL N=6 figure saved at 300 DPI: results/figures/additional_n6_layer_study.png')
 if __name__=='__main__':main()
