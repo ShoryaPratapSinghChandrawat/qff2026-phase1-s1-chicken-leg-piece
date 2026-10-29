@@ -19,4 +19,3 @@
 ## Human Oversight & Responsibility
 
 The team members (**Swarup, Biswajit, Arhaan Sethi, and Shorya Pratap Singh Chandrawat**) actively designed the Processor D topology, selected the minimal layers, defined the research scopes, reviewed all generated code and documentation, and validated every numerical claim against primary CSV datasets. The team takes full responsibility for the scientific integrity, correctness, and honesty of this submission.
-

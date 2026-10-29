@@ -125,4 +125,3 @@ python verify_submission.py
 python -m pytest -q
 ```
 In 15 seconds, the script verifies all 25 official kit hashes, validates all table schemas, recomputes exact and noisy references, verifies Processor D compliance, and confirms that `report.md` matches `docs/report.md` byte-for-byte.
-

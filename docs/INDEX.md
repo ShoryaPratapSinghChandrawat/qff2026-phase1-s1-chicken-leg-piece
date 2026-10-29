@@ -43,4 +43,3 @@ This directory contains complete technical reports, audit logs, presentation scr
 - **Full Scientific Evaluation (15 Minutes):** Read [`report.md`](report.md), inspect `main.ipynb`, and review [`FINAL_RUBRIC_MATRIX.md`](FINAL_RUBRIC_MATRIX.md).
 - **Viva & Defense Preparation (10 Minutes):** Review [`PRESENTATION_PITCH.md`](PRESENTATION_PITCH.md) and [`SEED_STABILITY.md`](SEED_STABILITY.md).
 - **Strict Reproducibility Audit (5 Minutes):** Execute `python verify_submission.py && python -m pytest -q` and inspect [`NUMBER_AUDIT.md`](NUMBER_AUDIT.md).
-
