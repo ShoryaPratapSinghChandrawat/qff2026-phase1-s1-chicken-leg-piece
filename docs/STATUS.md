@@ -133,5 +133,5 @@ Structural presentation improvements and reviewer navigational aids were adapted
 - Implemented `src/make_seed_table.py` and generated `docs/SEED_STABILITY.md` analyzing seed spread across the seven fields.
 - Added `docs/PRESENTATION_PITCH.md` containing a 5-minute presentation script and 12 viva Q&As with exact numbers cited from our primary CSVs.
 - Created `docs/INDEX.md` as a single master directory table of contents.
-- Documented the architectural trade-off regarding Processor D: our submission uses the 7-edge chorded-ring design (hash `f050565e...`), whereas teammate Arhaan Sethi utilizes a 9-edge cycle with 3 chords (hash `dbde5c71...`).
+- Documented the architectural trade-off regarding Processor D: our submission uses the 7-edge chorded-ring design (hash `f050565e...`), whereas teammate Arhaan Sethi utilizes a 9-edge cycle with 3 chords (hash `dbde5c71...`). Fewer couplers means less to calibrate; crosstalk is not represented in the official noise model, so no benefit is claimed. The measured trade-off remains 7 vs 9 couplers and far Bell pair fidelity 0.938 vs 0.946.
 - AI disclosure updated to reflect Arena.ai Agent Mode, Codex, and Antigravity.

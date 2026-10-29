@@ -67,7 +67,7 @@ For convenience, activate `.venv` and run `make test`, `make verify`, `make note
 
 ## Limitations
 
-All noise and mitigation results use a synthetic model; Processor D is not calibrated hardware. The mitigation study applies p2-only scales and shared calibration counts, not hardware noise scaling. Best-of-three is a limited optimizer budget, and all non-converged N=4/N=6 starts remain flagged in raw data. Finite-size crossings are diagnostic interpolations on a discrete field grid, not a thermodynamic extrapolation.
+All noise and mitigation results use a synthetic model; Processor D is not calibrated hardware. Fewer couplers means less to calibrate; crosstalk is not represented in the official noise model, so no benefit is claimed. The measured trade-off between 7 and 9 couplers is reflected in the far Bell pair fidelity (0.938 on 7 couplers vs 0.946 on 9 couplers). The mitigation study applies p2-only scales and shared calibration counts, not hardware noise scaling. Best-of-three is a limited optimizer budget, and all non-converged N=4/N=6 starts remain flagged in raw data. Finite-size crossings are diagnostic interpolations on a discrete field grid, not a thermodynamic extrapolation.
 
 ## AI disclosure
 

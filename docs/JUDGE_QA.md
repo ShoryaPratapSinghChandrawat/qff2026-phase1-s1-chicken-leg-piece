@@ -21,7 +21,7 @@ For each of the seven N=4 instances, the computed lowest two eigenvalues were co
 
 ### 5. Why choose chorded-ring/RZZ when ring/RZZ and grid/RZZ tie?
 
-The three Pareto rows are equal on the measured dimensions: N=4 L=2 two-qubit count 6, depth 17, zero SWAPs, adjacent Bell mean 1, far Bell mean 7, diameter 3. The recorded sort key then ranks basis (`CX<CZ<RZZ`) and topology name in ascending lexical order. With RZZ common, `chorded_ring` precedes `grid_2x3` and `ring`. This is a deterministic naming tie-break—not evidence that the chorded ring is uniquely better. Evidence: `results/tables/d_candidates.csv`, the three `pareto=True` rows and columns named above; `src/scan_processor_d.py`, `sortkey`; selected edges in `processors/processor_D.json`.
+The three Pareto rows are equal on the measured dimensions: N=4 L=2 two-qubit count 6, depth 17, zero SWAPs, adjacent Bell mean 1, far Bell mean 7, diameter 3. The recorded sort key then ranks basis (`CX<CZ<RZZ`) and topology name in ascending lexical order. With RZZ common, `chorded_ring` precedes `grid_2x3` and `ring`. This is a deterministic naming tie-break—not evidence that the chorded ring is uniquely better. Furthermore, fewer couplers means less to calibrate; crosstalk is not represented in the official noise model, so no benefit is claimed. The measured trade-off remains 7 vs 9 couplers and far Bell pair fidelity 0.938 vs 0.946. Evidence: `results/tables/d_candidates.csv`, the three `pareto=True` rows and columns named above; `src/scan_processor_d.py`, `sortkey`; selected edges in `processors/processor_D.json`.
 
 ### 6. Does the lower RZZ gate count prove better physical performance than CX?
 

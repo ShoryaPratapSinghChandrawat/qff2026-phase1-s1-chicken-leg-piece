@@ -71,7 +71,7 @@ The layer depths are 4, 4, 4, 3, 4, 3, 3. The non-monotonicity arises from the i
 ### Q3: Why did you choose a chorded-ring topology with native RZZ for Processor D?
 **Answer:**
 Because the open-chain TFIM maps onto linear topologies with **0 routing SWAPs** on both Processor A (5-qubit cross) and Processor B (9-qubit grid), routing overhead was zero. The measured bottleneck was the decomposition of $ZZ$ rotations into two CX gates.
-Processor D introduces native $RZZ$ gates (`["rz", "sx", "x", "rzz"]`), enabling direct one-gate execution of $ZZ(\theta)$. Its 6-qubit, 7-edge chorded-ring graph accommodates 4-qubit and 6-qubit open chains without routing while passing all official rules in `tools/check_processor_d.py`.
+Processor D introduces native $RZZ$ gates (`["rz", "sx", "x", "rzz"]`), enabling direct one-gate execution of $ZZ(\theta)$. Its 6-qubit, 7-edge chorded-ring graph accommodates 4-qubit and 6-qubit open chains without routing while passing all official rules in `tools/check_processor_d.py`. Regarding connectivity: fewer couplers means less to calibrate; crosstalk is not represented in the official noise model, so no benefit is claimed. The measured trade-off is 7 vs 9 couplers and far Bell pair fidelity 0.938 vs 0.946.
 
 ### Q4: What exact resource savings does Processor D achieve?
 **Answer:**
