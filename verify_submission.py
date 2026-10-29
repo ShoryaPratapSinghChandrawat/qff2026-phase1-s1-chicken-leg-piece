@@ -60,7 +60,15 @@ ADDITIONAL_SCHEMAS = {
 
 ADDITIONAL_SCOPE = "additional, not part of the official required results"
 N6_G = (0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 2.00)
-N6_LAYERS = tuple(range(1, 9))
+G_EXTEND = {0.5, 0.75, 1.0}
+N6_LAYERS_BASE = tuple(range(1, 9))
+N6_LAYERS_EXT = tuple(range(1, 13))
+
+
+def n6_layers_for_g(g: float) -> tuple[int, ...]:
+    return N6_LAYERS_EXT if round(float(g), 2) in G_EXTEND else N6_LAYERS_BASE
+
+
 FINITE_SIZES = (4, 6, 8, 10, 12)
 FINITE_G = tuple(round(0.25 + 0.05 * i, 2) for i in range(36))
 MITIGATION_G = (0.5, 1.0, 2.0)
@@ -534,18 +542,18 @@ def validate_n6_research(tables: dict[str, list[dict[str, str]]]) -> tuple[int, 
     layers, minimal, resources = (tables[layer_name], tables[minimal_name], tables[resource_name])
     label = lambda name: f"results/additional/{name}"
 
-    require(len(raw) == 7 * 8 * 3, f"{label(raw_name)}: expected 168 rows, got {len(raw)}")
+    expected_raw_keys = {(6, g, layer, seed) for g in N6_G for layer in n6_layers_for_g(g) for seed in SEEDS}
+    require(len(raw) == len(expected_raw_keys), f"{label(raw_name)}: expected {len(expected_raw_keys)} rows, got {len(raw)}")
     raw_index = require_unique(raw, lambda r: (int(r["N"]), float(r["g"]), int(r["layers"]), int(r["seed"])), label(raw_name))
-    expected_raw_keys = {(6, g, layer, seed) for g in N6_G for layer in N6_LAYERS for seed in SEEDS}
     require(set(raw_index) == expected_raw_keys, f"{label(raw_name)}: missing or unexpected N/g/layer/seed coverage")
     require(len(exact) == len(N6_G), f"{label(exact_name)}: expected 7 rows, got {len(exact)}")
     exact_by_g = require_unique(exact, lambda r: (float(r["g"]),), label(exact_name))
     require(set(exact_by_g) == {(g,) for g in N6_G}, f"{label(exact_name)}: incorrect g coverage")
-    require(len(aggregates) == 7 * 8, f"{label(aggregate_name)}: expected 56 rows, got {len(aggregates)}")
+    expected_aggregate_keys = {(6, g, layer) for g in N6_G for layer in n6_layers_for_g(g)}
+    require(len(aggregates) == len(expected_aggregate_keys), f"{label(aggregate_name)}: expected {len(expected_aggregate_keys)} rows, got {len(aggregates)}")
     aggregate_by_key = require_unique(aggregates, lambda r: (int(r["N"]), float(r["g"]), int(r["layers"])), label(aggregate_name))
-    expected_aggregate_keys = {(6, g, layer) for g in N6_G for layer in N6_LAYERS}
     require(set(aggregate_by_key) == expected_aggregate_keys, f"{label(aggregate_name)}: incorrect N/g/layer coverage")
-    require(len(layers) == 56, f"{label(layer_name)}: expected 56 rows, got {len(layers)}")
+    require(len(layers) == len(expected_aggregate_keys), f"{label(layer_name)}: expected {len(expected_aggregate_keys)} rows, got {len(layers)}")
     layer_by_key = require_unique(layers, lambda r: (int(r["N"]), float(r["g"]), int(r["layers"])), label(layer_name))
     require(set(layer_by_key) == expected_aggregate_keys, f"{label(layer_name)}: incorrect N/g/layer coverage")
     require(len(minimal) == len(N6_G), f"{label(minimal_name)}: expected 7 rows, got {len(minimal)}")
@@ -592,8 +600,8 @@ def validate_n6_research(tables: dict[str, list[dict[str, str]]]) -> tuple[int, 
                 f"{label(raw_name)} {key}: fidelity outside [0,1]")
         require(float(row["runtime_seconds"]) >= 0 and float(row["optimizer_calls"]) >= 0,
                 f"{label(raw_name)} {key}: negative runtime or optimizer call count")
-    require(len(failed) == 56,
-            f"{label(raw_name)}: expected to retain the 56 recorded optimizer non-success flags, got {len(failed)}")
+    require(len(failed) == 88,
+            f"{label(raw_name)}: expected to retain the 88 recorded optimizer non-success flags, got {len(failed)}")
 
     for g in N6_G:
         obj = json.loads((ROOT / "data/s1" / f"tfim_open_N6_g{g:.2f}.json").read_text(encoding="utf-8"))
@@ -612,7 +620,7 @@ def validate_n6_research(tables: dict[str, list[dict[str, str]]]) -> tuple[int, 
                 f"{label(exact_name)} g={g}: official reference tolerance exceeded")
 
     for g in N6_G:
-        for layer in N6_LAYERS:
+        for layer in n6_layers_for_g(g):
             key = (6, g, layer)
             starts = [raw_index[(6, g, layer, seed)] for seed in SEEDS]
             winner = min(starts, key=lambda row: float(row["energy"]))
@@ -641,7 +649,8 @@ def validate_n6_research(tables: dict[str, list[dict[str, str]]]) -> tuple[int, 
                   f"{label(layer_name)} {key}: optimizer_calls_winner")
 
     for g in N6_G:
-        passes = [layer for layer in N6_LAYERS
+        layers_for_g_val = n6_layers_for_g(g)
+        passes = [layer for layer in layers_for_g_val
                   if abs(float(layer_by_key[(6, g, layer)]["abs_energy_err"])) < 1e-3]
         first_pass = min(passes) if passes else None
         if first_pass is not None:
@@ -651,7 +660,7 @@ def validate_n6_research(tables: dict[str, list[dict[str, str]]]) -> tuple[int, 
         else:
             selected = min((row for (n, row_g, _layer, _seed), row in raw_index.items() if n == 6 and row_g == g),
                            key=lambda row: abs(float(row["energy_err"])))
-            expected_minimum = "NOT_REACHED_L<=8"
+            expected_minimum = f"NOT_REACHED_L<={max(layers_for_g_val)}"
         record = minimal_by_g[(g,)]
         require(str(record["minimal_L_abs_err_lt_1e-3"]) == expected_minimum,
                 f"{label(minimal_name)} g={g}: minimum threshold layer is inconsistent")

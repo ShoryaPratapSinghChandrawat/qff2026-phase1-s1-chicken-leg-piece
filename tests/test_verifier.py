@@ -70,14 +70,14 @@ def test_additional_verifier_rejects_missing_required_file(monkeypatch, tmp_path
 def test_additional_verifier_rejects_wrong_n6_row_count():
     tables = _additional_tables()
     tables["s1_n6_seed_runs.csv"].pop()
-    with pytest.raises(AssertionError, match="expected 168 rows"):
+    with pytest.raises(AssertionError, match="expected 204 rows"):
         verifier.validate_n6_research(tables)
 
 
 def test_additional_verifier_rejects_duplicate_n6_key():
     tables = _additional_tables()
     tables["s1_n6_seed_runs.csv"].append(dict(tables["s1_n6_seed_runs.csv"][0]))
-    with pytest.raises(AssertionError, match="expected 168 rows"):
+    with pytest.raises(AssertionError, match="expected 204 rows"):
         verifier.validate_n6_research(tables)
     tables = _additional_tables()
     tables["s1_n6_seed_runs.csv"].append(dict(tables["s1_n6_seed_runs.csv"][0]))
