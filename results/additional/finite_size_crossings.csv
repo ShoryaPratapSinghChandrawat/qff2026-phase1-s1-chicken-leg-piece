@@ -1,0 +1,5 @@
+scope,quantity,N_small,N_large,g_crossing_linear_interpolation,status
+"additional, not part of the official required results",N times gap,4,6,0.9542902070863429,linear interpolation between 0.05-spaced grid points
+"additional, not part of the official required results",N times gap,6,8,0.9752035331009428,linear interpolation between 0.05-spaced grid points
+"additional, not part of the official required results",N times gap,8,10,0.9843086715684647,linear interpolation between 0.05-spaced grid points
+"additional, not part of the official required results",N times gap,10,12,0.989085700271971,linear interpolation between 0.05-spaced grid points
