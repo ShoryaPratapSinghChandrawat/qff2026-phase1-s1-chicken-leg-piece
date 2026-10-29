@@ -1,3 +1,5 @@
+This folder contains the Phase 1 submission. The Phase 2 project is in the repository root.
+
 # PS-S1: exact, variational, and noisy A/B simulation
 
 **Qiskit Fall Fest 2026 · Phase 1 · SRM University-AP**  
