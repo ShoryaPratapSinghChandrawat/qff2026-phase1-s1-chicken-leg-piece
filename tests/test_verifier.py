@@ -55,3 +55,48 @@ def test_official_template_schemas_are_parsed():
     schemas = verifier.parse_template_schemas(source.read_text(encoding="utf-8"))
     assert schemas["bell.csv"] == ["pair", "pair_distance", "condition", "two_qubit_gates", "XX", "XX_se", "YY", "YY_se", "ZZ", "ZZ_se", "fidelity", "fidelity_se"]
     assert "s1_results.csv" in schemas and "s1_noisy.csv" in schemas
+
+
+def _additional_tables():
+    return verifier._read_additional_tables()
+
+
+def test_additional_verifier_rejects_missing_required_file(monkeypatch, tmp_path):
+    monkeypatch.setattr(verifier, "ROOT", tmp_path)
+    with pytest.raises(AssertionError, match="missing required file"):
+        verifier._read_additional_tables()
+
+
+def test_additional_verifier_rejects_wrong_n6_row_count():
+    tables = _additional_tables()
+    tables["s1_n6_seed_runs.csv"].pop()
+    with pytest.raises(AssertionError, match="expected 168 rows"):
+        verifier.validate_n6_research(tables)
+
+
+def test_additional_verifier_rejects_duplicate_n6_key():
+    tables = _additional_tables()
+    tables["s1_n6_seed_runs.csv"].append(dict(tables["s1_n6_seed_runs.csv"][0]))
+    with pytest.raises(AssertionError, match="expected 168 rows"):
+        verifier.validate_n6_research(tables)
+    tables = _additional_tables()
+    tables["s1_n6_seed_runs.csv"].append(dict(tables["s1_n6_seed_runs.csv"][0]))
+    tables["s1_n6_seed_runs.csv"].pop(1)
+    with pytest.raises(AssertionError, match="duplicate key"):
+        verifier.validate_n6_research(tables)
+
+
+def test_additional_verifier_rejects_nonfinite_finite_size_value():
+    tables = _additional_tables()
+    tables["finite_size_scaling.csv"][0]["gap"] = "NaN"
+    with pytest.raises(AssertionError, match="gap is non-finite"):
+        verifier.validate_finite_size_research(tables)
+
+
+def test_additional_verifier_rejects_inconsistent_mitigation_error():
+    tables = _additional_tables()
+    tables["mitigation_d_results.csv"][0]["raw_abs_error"] = str(
+        float(tables["mitigation_d_results.csv"][0]["raw_abs_error"]) + 0.1
+    )
+    with pytest.raises(AssertionError, match="raw_abs_error"):
+        verifier.validate_mitigation_research(tables)

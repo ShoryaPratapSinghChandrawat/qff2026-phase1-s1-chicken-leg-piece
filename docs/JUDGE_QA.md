@@ -37,7 +37,7 @@ For each basis, parity estimates the expectation and standard error from 4,096 s
 
 ### 9. Can the finite-size results locate the thermodynamic critical point?
 
-No. The required VQE is N=4; an exact N=6 gap/half-chain entropy calculation is supplemental and no size extrapolation was performed. The finite-size crossover is smooth. The `mz` one-point diagnostic is near zero in the selected symmetric ground states while `mx`, `Czz_nn`, and `mz2` vary; this does not mean longitudinal correlations vanish. We make no critical exponent or thermodynamic critical-point claim. Evidence: `results/tables/s1_results.csv`, observables; `results/additional/criticality.csv`, `N`, `g`, `gap`, `half_chain_entropy_bits`.
+No. The additional exact sparse study contains N=4,6,8,10,12 at 36 fields and reports the gap, N-scaled gap, half-chain entropy, and `<Mz²>/N²`. Four adjacent-size `N × gap` crossings are linearly interpolated from neighboring 0.05-spaced fields, trending toward the known infinite-chain `g_c=1`. They remain finite-size diagnostics and do not establish a thermodynamic critical point, exponent, or extrapolated limit. Evidence: `results/additional/finite_size_scaling.csv`, `finite_size_crossings.csv`, and `results/figures/additional_finite_size_scaling.png`.
 
 ### 10. Can another person reproduce the package, and is it submitted?
 
@@ -51,3 +51,7 @@ It reuses the same saved logical parameters for each of g=0.5, 1.0, and 2.0 on A
 ### 12. Why list both CX and RZZ resource rows?
 
 The two encodings separate logical interaction decomposition from processor-native execution. They show that A/B already need no SWAPs for the open chain, while D's RZZ basis reduces the counted two-qubit gates from 18 to 9 for the selected L=3 circuit. D's CX-form depth is 58, so the report uses the native RZZ row for the D advantage and discloses both. Source: `results/tables/resources.csv`.
+
+### 13. What do the N=6 and mitigation extensions show?
+
+The additional N=6 run has 168 starts through L=8 and 56 recorded optimizer non-success flags. It reaches strict `|energy error|<1e-3` for four of seven fields; at g=1.25 the selected L=8 result meets the threshold while its optimizer flag is false. The tier remains incomplete. The separate D mitigation study has 15 g/observable rows and 400 bootstrap replicates per row; it uses synthetic noise, p2-only scaling, and targets the noiseless expectation of the same selected circuit. It is not ground-state or hardware evidence. Evidence: `results/additional/s1_n6_*` and `mitigation_d_results.csv`.

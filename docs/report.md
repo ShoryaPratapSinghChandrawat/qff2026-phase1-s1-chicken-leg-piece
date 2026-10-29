@@ -13,7 +13,7 @@ The common Bell experiment gives ideal fidelity 1 for both tested pairs. Under t
 
 Processor D is a connected six-qubit, seven-edge chorded ring with native RZZ. The design targets a measured two-qubit gate-count bottleneck, not routing: the open-chain HVA already uses zero routing SWAPs on A and B. For the selected N=4, L=3 circuit, both A and B use 18 generic two-qubit gates in either representation; D uses 18 when expressed in CX form and 9 when expressed in its native RZZ form. The official model assigns the same baseline p2 to all three gate families. The added controlled comparison therefore evaluates the practical effect of the shorter native RZZ circuit under the declared synthetic model, without attributing better per-gate physical fidelity to RZZ.
 
-Two separate research extensions are included: a same-parameter A/B/D two-qubit-error sensitivity grid, and exact N=4/N=6 finite-size spectral-gap and entanglement-entropy diagnostics. The optional N=6 VQE work is incomplete; it is not presented as a completed bonus tier.
+Additional analyses, clearly separated from required results, include a same-parameter A/B/D two-qubit-error sensitivity grid, exact finite-size diagnostics through N=12, a partial N=6 VQE tier, and readout/ZNE mitigation on Processor D. These use saved simulations and exact sparse calculations; they do not claim hardware performance or guaranteed rubric credit.
 
 ## 2. Problem and method
 
@@ -108,19 +108,39 @@ At alpha=1, the result reflects the modeled reduction in two-qubit gate location
 
 ![Controlled A/B/D p2 sensitivity](results/figures/p2_processor_comparison.png)
 
-## 7. Finite-size research and N=6 boundary
+## 7. Additional research (not part of the official required results)
 
-The exact finite-size extension reports the spectral gap `E1−E0` and half-chain von Neumann entropy for N=4 and N=6. At g=0.25, the gaps are approximately 0.007325 (N=4) and 0.000458 (N=6), and the entropies are 0.9893 and 0.9996 bits. At g=1.0, the gaps are 0.694593 and 0.482147, with entropies 0.4110 and 0.4732 bits. These results indicate a small finite-size gap on the ordered side and a smooth change across the sampled fields; two system sizes do not support a thermodynamic extrapolation or critical-point estimate.
+### N=6 variational extension
 
-A separate N=6 VQE attempt saved 84 starts for L=1..4 and validated exact references. Only g=2.0 reaches the strict layer threshold by L=4; the other six values do not. The N=6 tier remains incomplete and is not claimed as bonus credit. It is separated from all official N=4 tables.
+The saved N=6 sweep in `results/additional/s1_n6_seed_runs.csv` covers all seven fields, L=1..8, and seeds 0, 1, and 2: 168 starts. Its raw file preserves 56 optimizer non-success flags, including their messages. The strict `|energy error| < 1e-3` threshold is first reached at L=8 for g=0.25 and 1.25, L=5 for g=1.5, and L=4 for g=2.0; it is not reached through L=8 for g=0.5, 0.75, or 1.0. At g=1.25 the selected L=8 result has absolute energy error `0.0008801` while its optimizer flag is `success=False`. Thus threshold attainment and optimizer termination status are reported separately. `results/additional/s1_n6_minimal_layers.csv` records these selections; `s1_n6_resources.csv` records Processor A as `not executable: needs 6 qubits, has 5` and includes B/D resource rows. This remains a partial optional tier, not a completed bonus claim.
 
-![Finite-size gap and entanglement](results/figures/criticality_gap_entropy.png)
+### Exact finite-size scaling
+
+`results/additional/finite_size_scaling.csv` contains 180 exact sparse-spectrum rows: N=4, 6, 8, 10, and 12 at 36 fields from 0.25 to 2.00 in 0.05 steps. It records the gap `E1−E0`, `N × gap`, half-chain von Neumann entropy, and `<Mz²>/N²`. Fourteen N=4/N=6 field pairs (the seven official fields at each size) were checked against official E0/E1 reference metadata with absolute tolerance `1e-9`.
+
+`results/additional/finite_size_crossings.csv` defines crossings as sign changes between adjacent-size `N × gap` curves, with each position obtained by linear interpolation between neighboring 0.05-spaced g points. It gives N=4/6 at `g≈0.9543`, N=6/8 at `0.9752`, N=8/10 at `0.9843`, and N=10/12 at `0.9891`. The dashed `g_c=1` reference is the known infinite-chain value. These finite open-chain trends approach that reference over the sizes shown; this grid does not establish a thermodynamic critical point, exponent, or extrapolated limit. The generator also writes `results/additional/finite_size_scaling_interpretation.md`.
+
+![Additional finite-size scaling, not part of required results](results/figures/additional_finite_size_scaling.png)
+
+### Readout correction and zero-noise extrapolation
+
+The D mitigation data in `results/additional/mitigation_d_results.csv` contain 15 rows for g={0.5,1,2} and five observables, with 400 bootstrap replicates per row. This is synthetic shot-noise simulation. It compares raw estimates, readout-error correction, p2-only zero-noise extrapolation at scales 1, 1.5, and 2, and their combination. The fixed rates are `p1=0.001`, baseline `p2=0.005`, and `p_readout=0.01`. The target is the noiseless expectation of the same saved selected HVA circuit; it is not the exact ground-state expectation or a hardware result. Standard errors below are bootstrap standard errors of the estimate; absolute errors are relative to that selected-circuit target.
+
+| g | Raw energy absolute error (estimate SE) | Readout-corrected ZNE absolute error (estimate SE) |
+|---:|---:|---:|
+| 0.5 | 0.43656 (0.02878) | 0.20660 (0.06882) |
+| 1.0 | 0.39289 (0.03694) | 0.16376 (0.08571) |
+| 2.0 | 0.71213 (0.05028) | 0.46551 (0.11468) |
+
+The combined method lowers energy absolute error at these three tested fields; that is not a claim of improvement for every observable or outside this sample. `results/additional/mitigation_d_costs.csv` counts 26 unique circuits and 106,496 shots including reused readout calibration, which is 20 additional circuits and 81,920 additional shots versus the raw alpha=1 data alone, including calibration.
+
+![Additional mitigation results, not part of required results](results/figures/additional_mitigation_d.png)
 
 ## 8. Reproducibility, integrity, and limitations
 
-The official `qff_sim.py` and starter copy are byte-identical to the supplied official hash; the embedded official manifest has 25 entries. Processor D passes the unchanged checker at 4 and 6 qubits. The notebook is saved executed with `RECOMPUTE=False`, displaying the saved result tables and figures. `verify_submission.py` independently checks source hashes, official schemas, raw-grid coverage, aggregates and references, Bell equations and the 4,096-shot runner setting, noisy D rows, both CX/RZZ resource rows, all 36 supplemental A/B/D comparison rows, the notebook, figures, documentation, and D checker results.
+The official `qff_sim.py` and starter copy are byte-identical to the supplied official hash; the embedded official manifest has 25 entries. Processor D passes the unchanged checker at 4 and 6 qubits. The notebook is saved executed with `RECOMPUTE=False`, displaying saved result tables and figures. `verify_submission.py` checks source hashes, official schemas and outputs, all N=6 saved states and summary/resource consistency, all 180 finite-size rows and recomputed spectra/observables/crossings, mitigation targets/errors/costs, Bell equations and the 4,096-shot runner setting, required noisy D rows, both CX/RZZ resource encodings, the 36-row supplemental A/B/D comparison, figures, notebook, docs, and the D checker results.
 
-The official required noisy S1 table covers D; the A/B/D noisy comparison is supplemental and limited to three selected field values. All noisy results use simplified synthetic assumptions, not calibrated noise. Equal p2 across CX/CZ/RZZ is a modeling choice, not a physical finding. The optional N=6 variational tier is incomplete. Best-of-three may miss a better optimizer basin. The exact gap and entropy work is finite-size only. No hardware execution or thermodynamic extrapolation is claimed.
+The official required noisy S1 table covers D; A/B comparisons and mitigation are additional research. All noise results use synthetic assumptions, not calibrated noise. Equal p2 across CX/CZ/RZZ is a model choice, not a physical finding. Best-of-three may miss a better optimizer basin, and the N=6 VQE tier does not meet the threshold at three fields. The finite-size crossings are interpolations on a discrete grid, not a thermodynamic extrapolation. No hardware execution or thermodynamic limit is claimed.
 
 ## AI disclosure
 

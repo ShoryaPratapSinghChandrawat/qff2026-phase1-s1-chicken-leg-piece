@@ -16,8 +16,9 @@ import sys
 from pathlib import Path
 
 import numpy as np
+from scipy.sparse.linalg import eigsh
 from qiskit_aer import AerSimulator
-from qiskit.quantum_info import DensityMatrix, SparsePauliOp, Statevector, state_fidelity
+from qiskit.quantum_info import DensityMatrix, SparsePauliOp, Statevector, partial_trace, state_fidelity
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
@@ -43,6 +44,27 @@ NUMERIC_COLUMNS = {
 }
 RAW_NUMERIC = {"N", "g", "layers", "seed", "energy", "exact_E0", "energy_err", "fidelity", "fidelity_2", "mx", "czz_nn", "mz2", "mz", "optimizer_calls", "n_params", "two_q_on_D", "status", "runtime_seconds"}
 RAW_REQUIRED = ["N", "g", "layers", "seed", "energy", "exact_E0", "energy_err", "fidelity", "fidelity_2", "mx", "czz_nn", "mz2", "mz", "optimizer_calls", "n_params", "two_q_on_D", "success", "status", "message", "runtime_seconds", "theta_json"]
+
+ADDITIONAL_SCHEMAS = {
+    "s1_n6_seed_runs.csv": ["N", "g", "layers", "seed", "energy", "exact_E0", "exact_E1", "energy_err", "fidelity", "fidelity_2", "mx", "czz_nn", "mz2", "mz", "optimizer_calls", "n_params", "success", "status", "message", "runtime_seconds", "theta_json"],
+    "s1_n6_exact_reference.csv": ["N", "g", "exact_E0", "exact_E1", "E0_metadata", "E1_metadata", "E0_abs_diff", "E1_abs_diff", "mx_exact", "czz_nn_exact", "mz2_exact", "mz_exact"],
+    "s1_n6_results.csv": ["N", "g", "layers", "best_seed", "best_energy", "exact_E0", "energy_err", "fidelity", "fidelity_2", "mx", "mx_exact", "czz_nn", "czz_nn_exact", "mz2", "mz2_exact", "mz", "optimizer_calls", "n_params"],
+    "s1_n6_layer_study.csv": ["N", "g", "layers", "best_seed", "best_energy", "energy_err", "abs_energy_err", "any_seed_success", "optimizer_calls_winner"],
+    "s1_n6_minimal_layers.csv": ["scope", "N", "g", "minimal_L_abs_err_lt_1e-3", "threshold_met_within_L1_to_L8", "selected_seed", "selected_L", "selected_energy_error", "selected_optimizer_success", "failed_starts_at_selected_L", "selection_rule"],
+    "s1_n6_resources.csv": ["scope", "circuit_label", "N", "g", "layers", "seed", "selection_status", "processor", "zz_mode", "executable", "reason", "logical_qubits", "physical_qubits", "logical_2q", "two_q", "depth", "two_q_depth", "swaps", "routing_overhead_2q", "selected_energy_error", "optimizer_success"],
+    "finite_size_scaling.csv": ["scope", "solver", "N", "g", "E0_sparse", "E1_sparse", "gap", "gap_times_N", "half_chain_entropy_bits", "mz2_over_N2", "reference_checked", "E0_metadata", "E1_metadata", "E0_abs_diff", "E1_abs_diff", "eigsh_tolerance", "deterministic_v0_seed"],
+    "finite_size_crossings.csv": ["scope", "quantity", "N_small", "N_large", "g_crossing_linear_interpolation", "status"],
+    "mitigation_d_results.csv": ["scope", "g", "layers", "seed", "observable", "ideal_selected_circuit_target", "target_definition", "alpha_p2_scales", "p1_fixed", "p2_baseline", "p_readout_fixed", "shots_per_basis_per_scale", "bootstrap_replicates", "readout_calibration_model", "raw_value", "raw_se", "raw_abs_error", "readout_corrected_value", "readout_corrected_se", "readout_corrected_abs_error", "zne_value", "zne_se", "zne_abs_error", "zne_readout_corrected_value", "zne_readout_corrected_se", "zne_readout_corrected_abs_error"],
+    "mitigation_d_costs.csv": ["scope", "data_experiment", "official_baseline_data_circuits_at_alpha_1", "additional_p2_scale_data_circuits_at_alpha_1_5_and_2", "readout_calibration_circuits_reused", "total_unique_data_circuits", "total_unique_circuits_including_calibration", "shots_per_circuit", "baseline_data_shots_at_alpha_1", "additional_shots_for_p2_scales", "readout_calibration_shots", "total_data_and_calibration_shots", "extra_circuits_vs_raw_alpha_1", "extra_shots_vs_raw_alpha_1", "calibration_reuse", "noise_settings"],
+}
+
+ADDITIONAL_SCOPE = "additional, not part of the official required results"
+N6_G = (0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 2.00)
+N6_LAYERS = tuple(range(1, 9))
+FINITE_SIZES = (4, 6, 8, 10, 12)
+FINITE_G = tuple(round(0.25 + 0.05 * i, 2) for i in range(36))
+MITIGATION_G = (0.5, 1.0, 2.0)
+MITIGATION_OBSERVABLES = ("energy", "mx", "czz_nn", "mz2", "mz")
 
 
 def require(condition: bool, message: str) -> None:
@@ -485,6 +507,424 @@ def validate_noisy(noisy_rows, raw, references, processor):
             close(row[column], observables[key], TOL, f"{label} g={g}: {column}")
 
 
+def _as_bool(value, label: str) -> bool:
+    normalized = str(value).strip().lower()
+    require(normalized in {"true", "false", "1", "0"}, f"{label}: expected boolean, got {value!r}")
+    return normalized in {"true", "1"}
+
+
+def _read_additional_tables() -> dict[str, list[dict[str, str]]]:
+    tables = {}
+    for name, expected_header in ADDITIONAL_SCHEMAS.items():
+        header, rows = read_csv(ROOT / "results/additional" / name)
+        require(header == expected_header,
+                f"results/additional/{name}: schema mismatch; expected {expected_header}, got {header}")
+        tables[name] = rows
+    return tables
+
+
+def validate_n6_research(tables: dict[str, list[dict[str, str]]]) -> tuple[int, int]:
+    raw_name = "s1_n6_seed_runs.csv"
+    exact_name = "s1_n6_exact_reference.csv"
+    aggregate_name = "s1_n6_results.csv"
+    layer_name = "s1_n6_layer_study.csv"
+    minimal_name = "s1_n6_minimal_layers.csv"
+    resource_name = "s1_n6_resources.csv"
+    raw, exact, aggregates = (tables[raw_name], tables[exact_name], tables[aggregate_name])
+    layers, minimal, resources = (tables[layer_name], tables[minimal_name], tables[resource_name])
+    label = lambda name: f"results/additional/{name}"
+
+    require(len(raw) == 7 * 8 * 3, f"{label(raw_name)}: expected 168 rows, got {len(raw)}")
+    raw_index = require_unique(raw, lambda r: (int(r["N"]), float(r["g"]), int(r["layers"]), int(r["seed"])), label(raw_name))
+    expected_raw_keys = {(6, g, layer, seed) for g in N6_G for layer in N6_LAYERS for seed in SEEDS}
+    require(set(raw_index) == expected_raw_keys, f"{label(raw_name)}: missing or unexpected N/g/layer/seed coverage")
+    require(len(exact) == len(N6_G), f"{label(exact_name)}: expected 7 rows, got {len(exact)}")
+    exact_by_g = require_unique(exact, lambda r: (float(r["g"]),), label(exact_name))
+    require(set(exact_by_g) == {(g,) for g in N6_G}, f"{label(exact_name)}: incorrect g coverage")
+    require(len(aggregates) == 7 * 8, f"{label(aggregate_name)}: expected 56 rows, got {len(aggregates)}")
+    aggregate_by_key = require_unique(aggregates, lambda r: (int(r["N"]), float(r["g"]), int(r["layers"])), label(aggregate_name))
+    expected_aggregate_keys = {(6, g, layer) for g in N6_G for layer in N6_LAYERS}
+    require(set(aggregate_by_key) == expected_aggregate_keys, f"{label(aggregate_name)}: incorrect N/g/layer coverage")
+    require(len(layers) == 56, f"{label(layer_name)}: expected 56 rows, got {len(layers)}")
+    layer_by_key = require_unique(layers, lambda r: (int(r["N"]), float(r["g"]), int(r["layers"])), label(layer_name))
+    require(set(layer_by_key) == expected_aggregate_keys, f"{label(layer_name)}: incorrect N/g/layer coverage")
+    require(len(minimal) == len(N6_G), f"{label(minimal_name)}: expected 7 rows, got {len(minimal)}")
+    minimal_by_g = require_unique(minimal, lambda r: (float(r["g"]),), label(minimal_name))
+    require(set(minimal_by_g) == {(g,) for g in N6_G}, f"{label(minimal_name)}: incorrect g coverage")
+    require(len(resources) == 15, f"{label(resource_name)}: expected 15 rows (one A capacity + 14 B/D), got {len(resources)}")
+    resource_by_key = require_unique(resources, lambda r: (r["circuit_label"], r["processor"]), label(resource_name))
+
+    raw_numeric = {"N", "g", "layers", "seed", "energy", "exact_E0", "exact_E1", "energy_err", "fidelity", "fidelity_2", "mx", "czz_nn", "mz2", "mz", "optimizer_calls", "n_params", "status", "runtime_seconds"}
+    exact_numeric = {"N", "g", "exact_E0", "exact_E1", "E0_metadata", "E1_metadata", "E0_abs_diff", "E1_abs_diff", "mx_exact", "czz_nn_exact", "mz2_exact", "mz_exact"}
+    aggregate_numeric = {"N", "g", "layers", "best_seed", "best_energy", "exact_E0", "energy_err", "fidelity", "fidelity_2", "mx", "mx_exact", "czz_nn", "czz_nn_exact", "mz2", "mz2_exact", "mz", "optimizer_calls", "n_params"}
+    layer_numeric = {"N", "g", "layers", "best_seed", "best_energy", "energy_err", "abs_energy_err", "optimizer_calls_winner"}
+    for rows, columns, table_label in ((raw, raw_numeric, label(raw_name)), (exact, exact_numeric, label(exact_name)),
+                                       (aggregates, aggregate_numeric, label(aggregate_name)), (layers, layer_numeric, label(layer_name))):
+        require_finite_columns(rows, columns, table_label)
+    failed = []
+    for key, row in raw_index.items():
+        n, g, layer, seed = key
+        require(n == 6, f"{label(raw_name)}: row {key} has N != 6")
+        close(row["exact_E0"], exact_by_g[(g,)]["exact_E0"], TOL, f"{label(raw_name)} {key}: exact_E0")
+        close(row["exact_E1"], exact_by_g[(g,)]["exact_E1"], TOL, f"{label(raw_name)} {key}: exact_E1")
+        close(row["energy_err"], float(row["energy"]) - float(row["exact_E0"]), TOL, f"{label(raw_name)} {key}: energy_err")
+        theta = np.asarray(json.loads(row["theta_json"]), dtype=float)
+        require(theta.ndim == 1 and len(theta) == int(row["n_params"]) and np.all(np.isfinite(theta)),
+                f"{label(raw_name)} {key}: invalid saved parameter vector")
+        circuit, params = sim.hva_ansatz(6, layer, zz_mode="cx")
+        require(len(params) == len(theta), f"{label(raw_name)} {key}: parameter count does not match HVA")
+        state = Statevector(circuit.assign_parameters(dict(zip(params, theta))))
+        hamiltonian = sim.tfim_hamiltonian(6, J=1.0, g=g, periodic=False)
+        energy = float(np.real(state.expectation_value(hamiltonian)))
+        close(row["energy"], energy, TOL, f"{label(raw_name)} {key}: recomputed energy")
+        values, eigenstates = sim.exact_spectrum(hamiltonian, 2)
+        ground_fidelity = float(state_fidelity(eigenstates[0], state))
+        first_fidelity = float(state_fidelity(eigenstates[1], state))
+        obs = sim.expectations(state, sim.observable_ops(6))
+        for column, expected in (("fidelity", ground_fidelity), ("fidelity_2", ground_fidelity + first_fidelity),
+                                 ("mx", obs["mx"]), ("czz_nn", obs["czz_nn"]), ("mz2", obs["mz2"]), ("mz", obs["mz"])):
+            close(row[column], expected, TOL, f"{label(raw_name)} {key}: {column}")
+        success = _as_bool(row["success"], f"{label(raw_name)} {key}: success")
+        if not success:
+            failed.append(row)
+            require(row["message"].strip(), f"{label(raw_name)} {key}: non-success start lost its message")
+        require(-TOL <= float(row["fidelity"]) <= 1.0 + TOL and -TOL <= float(row["fidelity_2"]) <= 1.0 + TOL,
+                f"{label(raw_name)} {key}: fidelity outside [0,1]")
+        require(float(row["runtime_seconds"]) >= 0 and float(row["optimizer_calls"]) >= 0,
+                f"{label(raw_name)} {key}: negative runtime or optimizer call count")
+    require(len(failed) == 56,
+            f"{label(raw_name)}: expected to retain the 56 recorded optimizer non-success flags, got {len(failed)}")
+
+    for g in N6_G:
+        obj = json.loads((ROOT / "data/s1" / f"tfim_open_N6_g{g:.2f}.json").read_text(encoding="utf-8"))
+        hamiltonian = sim.tfim_hamiltonian(6, J=1.0, g=g, periodic=False)
+        values, eigenstates = sim.exact_spectrum(hamiltonian, 2)
+        obs = sim.expectations(eigenstates[0], sim.observable_ops(6))
+        ref = exact_by_g[(g,)]
+        for column, expected in (("exact_E0", values[0]), ("exact_E1", values[1]),
+                                 ("E0_metadata", obj["meta"]["E0_exact"]), ("E1_metadata", obj["meta"]["E1_exact"]),
+                                 ("E0_abs_diff", abs(values[0] - float(obj["meta"]["E0_exact"]))),
+                                 ("E1_abs_diff", abs(values[1] - float(obj["meta"]["E1_exact"]))),
+                                 ("mx_exact", obs["mx"]), ("czz_nn_exact", obs["czz_nn"]),
+                                 ("mz2_exact", obs["mz2"]), ("mz_exact", obs["mz"])):
+            close(ref[column], expected, TOL, f"{label(exact_name)} g={g}: {column}")
+        require(float(ref["E0_abs_diff"]) <= 1e-9 and float(ref["E1_abs_diff"]) <= 1e-9,
+                f"{label(exact_name)} g={g}: official reference tolerance exceeded")
+
+    for g in N6_G:
+        for layer in N6_LAYERS:
+            key = (6, g, layer)
+            starts = [raw_index[(6, g, layer, seed)] for seed in SEEDS]
+            winner = min(starts, key=lambda row: float(row["energy"]))
+            aggregate = aggregate_by_key[key]
+            layer_row = layer_by_key[key]
+            expected_fields = (("best_seed", int(winner["seed"])), ("best_energy", float(winner["energy"])),
+                               ("exact_E0", float(winner["exact_E0"])), ("energy_err", float(winner["energy_err"])),
+                               ("fidelity", float(winner["fidelity"])), ("fidelity_2", float(winner["fidelity_2"])),
+                               ("mx", float(winner["mx"])), ("czz_nn", float(winner["czz_nn"])),
+                               ("mz2", float(winner["mz2"])), ("mz", float(winner["mz"])),
+                               ("optimizer_calls", int(winner["optimizer_calls"])), ("n_params", int(winner["n_params"])))
+            for column, expected in expected_fields:
+                close(aggregate[column], expected, TOL, f"{label(aggregate_name)} {key}: {column}")
+            for column, expected in (("mx_exact", exact_by_g[(g,)]["mx_exact"]),
+                                     ("czz_nn_exact", exact_by_g[(g,)]["czz_nn_exact"]),
+                                     ("mz2_exact", exact_by_g[(g,)]["mz2_exact"])):
+                close(aggregate[column], expected, TOL, f"{label(aggregate_name)} {key}: {column}")
+            close(layer_row["best_seed"], int(winner["seed"]), 0, f"{label(layer_name)} {key}: best_seed")
+            close(layer_row["best_energy"], float(winner["energy"]), TOL, f"{label(layer_name)} {key}: best_energy")
+            close(layer_row["energy_err"], float(winner["energy_err"]), TOL, f"{label(layer_name)} {key}: energy_err")
+            close(layer_row["abs_energy_err"], abs(float(winner["energy_err"])), TOL, f"{label(layer_name)} {key}: abs_energy_err")
+            require(_as_bool(layer_row["any_seed_success"], f"{label(layer_name)} {key}: any_seed_success") ==
+                    any(_as_bool(row["success"], f"{label(raw_name)} {key}: success") for row in starts),
+                    f"{label(layer_name)} {key}: any_seed_success is inconsistent")
+            close(layer_row["optimizer_calls_winner"], int(winner["optimizer_calls"]), 0,
+                  f"{label(layer_name)} {key}: optimizer_calls_winner")
+
+    for g in N6_G:
+        passes = [layer for layer in N6_LAYERS
+                  if abs(float(layer_by_key[(6, g, layer)]["abs_energy_err"])) < 1e-3]
+        first_pass = min(passes) if passes else None
+        if first_pass is not None:
+            candidates = [raw_index[(6, g, first_pass, seed)] for seed in SEEDS]
+            selected = min(candidates, key=lambda row: float(row["energy"]))
+            expected_minimum = str(first_pass)
+        else:
+            selected = min((row for (n, row_g, _layer, _seed), row in raw_index.items() if n == 6 and row_g == g),
+                           key=lambda row: abs(float(row["energy_err"])))
+            expected_minimum = "NOT_REACHED_L<=8"
+        record = minimal_by_g[(g,)]
+        require(str(record["minimal_L_abs_err_lt_1e-3"]) == expected_minimum,
+                f"{label(minimal_name)} g={g}: minimum threshold layer is inconsistent")
+        require(_as_bool(record["threshold_met_within_L1_to_L8"], f"{label(minimal_name)} g={g}: threshold flag") == (first_pass is not None),
+                f"{label(minimal_name)} g={g}: threshold flag is inconsistent")
+        close(record["selected_seed"], int(selected["seed"]), 0, f"{label(minimal_name)} g={g}: selected_seed")
+        close(record["selected_L"], int(selected["layers"]), 0, f"{label(minimal_name)} g={g}: selected_L")
+        close(record["selected_energy_error"], float(selected["energy_err"]), TOL,
+              f"{label(minimal_name)} g={g}: selected_energy_error")
+        require(_as_bool(record["selected_optimizer_success"], f"{label(minimal_name)} g={g}: success") ==
+                _as_bool(selected["success"], f"{label(raw_name)} selected g={g}: success"),
+                f"{label(minimal_name)} g={g}: selected success flag is inconsistent")
+        failed_at_layer = sum(not _as_bool(raw_index[(6, g, int(selected["layers"]), seed)]["success"],
+                                          f"{label(raw_name)} g={g} L={selected['layers']}: success") for seed in SEEDS)
+        close(record["failed_starts_at_selected_L"], failed_at_layer, 0, f"{label(minimal_name)} g={g}: failed_starts_at_selected_L")
+
+    capacity = [row for row in resources if row["processor"] == "A"]
+    require(len(capacity) == 1, f"{label(resource_name)}: expected one Processor A capacity row")
+    cap = capacity[0]
+    require(cap["reason"] == "not executable: needs 6 qubits, has 5" and
+            cap["selection_status"] == "processor_capacity" and not _as_bool(cap["executable"], f"{label(resource_name)} capacity executable"),
+            f"{label(resource_name)}: Processor A capacity exception is missing or incorrect")
+    require(int(cap["logical_qubits"]) == 6 and int(cap["physical_qubits"]) == 5,
+            f"{label(resource_name)}: Processor A capacity counts are incorrect")
+    expected_resource_keys = {("n6_optional_capacity_check", "A")}
+    proc_b = sim.PROCESSOR_B
+    proc_d = sim.load_processor(str(ROOT / "processors/processor_D.json"))
+    for g in N6_G:
+        selection = minimal_by_g[(g,)]
+        layer, seed = int(selection["selected_L"]), int(selection["selected_seed"])
+        winner = raw_index[(6, g, layer, seed)]
+        theta = np.asarray(json.loads(winner["theta_json"]), dtype=float)
+        expected_error = float(winner["energy_err"])
+        expected_status = ("first_threshold_layer" if
+                           _as_bool(selection["threshold_met_within_L1_to_L8"], f"{label(minimal_name)} g={g}: threshold flag")
+                           else "best_available_threshold_not_reached")
+        mode_by_processor = (("B", "cx", proc_b), ("D", "rzz", proc_d))
+        for processor_label, mode, processor in mode_by_processor:
+            key_label = f"n6_hva_g{g:.2f}_L{layer}_best_seed{seed}_{mode}"
+            expected_resource_keys.add((key_label, processor_label))
+            resource = resource_by_key[(key_label, processor_label)]
+            require(resource["scope"] == ADDITIONAL_SCOPE and resource["zz_mode"] == mode and
+                    resource["processor"] == processor_label and resource["selection_status"] == expected_status,
+                    f"{label(resource_name)} {key_label}/{processor_label}: selection metadata mismatch")
+            close(resource["N"], 6, 0, f"{label(resource_name)} {key_label}: N")
+            close(resource["g"], g, 0, f"{label(resource_name)} {key_label}: g")
+            close(resource["layers"], layer, 0, f"{label(resource_name)} {key_label}: layers")
+            close(resource["seed"], seed, 0, f"{label(resource_name)} {key_label}: seed")
+            require(resource["reason"] == "", f"{label(resource_name)} {key_label}: executable row has a failure reason")
+            require(_as_bool(resource["executable"], f"{label(resource_name)} {key_label}: executable"),
+                    f"{label(resource_name)} {key_label}: expected executable circuit")
+            close(resource["selected_energy_error"], expected_error, TOL,
+                  f"{label(resource_name)} {key_label}: selected_energy_error")
+            require(_as_bool(resource["optimizer_success"], f"{label(resource_name)} {key_label}: optimizer_success") ==
+                    _as_bool(winner["success"], f"{label(raw_name)} {key_label}: success"),
+                    f"{label(resource_name)} {key_label}: optimizer flag mismatch")
+            circuit, params = sim.hva_ansatz(6, layer, zz_mode=mode)
+            metrics = sim.circuit_metrics(circuit.assign_parameters(dict(zip(params, theta))), processor)
+            require(metrics.get("executable", False), f"{label(resource_name)} {key_label}: recomputed circuit is not executable")
+            for column, metric_key in (("logical_qubits", "logical_qubits"), ("physical_qubits", "physical_qubits"),
+                                       ("logical_2q", "logical_cx"), ("two_q", "cx"), ("depth", "depth"),
+                                       ("two_q_depth", "two_q_depth"), ("swaps", "swaps"),
+                                       ("routing_overhead_2q", "cx_overhead")):
+                close(resource[column], metrics[metric_key], 0, f"{label(resource_name)} {key_label}: {column}")
+    require(set(resource_by_key) == expected_resource_keys,
+            f"{label(resource_name)}: incorrect Processor B/D N=6 resource keys")
+    return len(raw), len(failed)
+
+
+def _independent_crossings(rows: list[dict[str, str]]) -> list[tuple[int, int, str, str]]:
+    scaled_gap = {(int(row["N"]), float(row["g"])): float(row["gap_times_N"]) for row in rows}
+    expected = []
+    for n_small, n_large in zip(FINITE_SIZES[:-1], FINITE_SIZES[1:]):
+        found = []
+        for g0, g1 in zip(FINITE_G[:-1], FINITE_G[1:]):
+            delta0 = scaled_gap[(n_small, g0)] - scaled_gap[(n_large, g0)]
+            delta1 = scaled_gap[(n_small, g1)] - scaled_gap[(n_large, g1)]
+            if delta0 == 0:
+                found.append(g0)
+            elif delta0 * delta1 < 0:
+                found.append(g0 + (g1 - g0) * (-delta0) / (delta1 - delta0))
+        if scaled_gap[(n_small, FINITE_G[-1])] == scaled_gap[(n_large, FINITE_G[-1])]:
+            found.append(FINITE_G[-1])
+        if not found:
+            expected.append((n_small, n_large, "NA", "no sign-change crossing on sampled grid"))
+        else:
+            expected.extend((n_small, n_large, f"{value:.15g}", "linear interpolation between 0.05-spaced grid points")
+                            for value in sorted(set(found)))
+    return expected
+
+
+def validate_finite_size_research(tables: dict[str, list[dict[str, str]]]) -> int:
+    rows = tables["finite_size_scaling.csv"]
+    crossing_rows = tables["finite_size_crossings.csv"]
+    label = "results/additional/finite_size_scaling.csv"
+    require(len(rows) == 180, f"{label}: expected 180 rows, got {len(rows)}")
+    by_key = require_unique(rows, lambda r: (int(r["N"]), float(r["g"])), label)
+    expected_keys = {(n, g) for n in FINITE_SIZES for g in FINITE_G}
+    require(set(by_key) == expected_keys, f"{label}: incorrect N/g coverage")
+    numeric = {"N", "g", "E0_sparse", "E1_sparse", "gap", "gap_times_N", "half_chain_entropy_bits", "mz2_over_N2", "eigsh_tolerance", "deterministic_v0_seed"}
+    require_finite_columns(rows, numeric, label)
+    for row in rows:
+        n, g = int(row["N"]), float(row["g"])
+        require(row["scope"] == ADDITIONAL_SCOPE and row["solver"] == "scipy.sparse.linalg.eigsh",
+                f"{label} N={n} g={g}: scope/solver metadata mismatch")
+        e0, e1 = float(row["E0_sparse"]), float(row["E1_sparse"])
+        gap = float(row["gap"])
+        require(e1 > e0 and gap > 0, f"{label} N={n} g={g}: non-positive excitation gap")
+        close(gap, e1 - e0, 1e-10, f"{label} N={n} g={g}: gap")
+        close(row["gap_times_N"], gap * n, 1e-10, f"{label} N={n} g={g}: gap_times_N")
+        entropy, mz2_n2 = float(row["half_chain_entropy_bits"]), float(row["mz2_over_N2"])
+        require(-1e-10 <= entropy <= n / 2 + 1e-10, f"{label} N={n} g={g}: entropy outside physical bounds")
+        require(-1e-10 <= mz2_n2 <= 1 + 1e-10, f"{label} N={n} g={g}: normalized magnetization outside physical bounds")
+        close(row["eigsh_tolerance"], 1e-12, 0, f"{label} N={n} g={g}: eigsh tolerance")
+        close(row["deterministic_v0_seed"], 91000 + n, 0, f"{label} N={n} g={g}: deterministic seed")
+
+    reference_count = 0
+    checked_fields = (0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 2.00)
+    for n, g in expected_keys:
+        row = by_key[(n, g)]
+        checked_expected = n in (4, 6) and g in checked_fields
+        require(_as_bool(row["reference_checked"], f"{label} N={n} g={g}: reference_checked") == checked_expected,
+                f"{label} N={n} g={g}: reference_checked flag is inconsistent")
+        if checked_expected:
+            reference_count += 1
+            obj = json.loads((ROOT / "data/s1" / f"tfim_open_N{n}_g{g:.2f}.json").read_text(encoding="utf-8"))
+            for metadata_col, diff_col, energy_col in (("E0_metadata", "E0_abs_diff", "E0_sparse"),
+                                                       ("E1_metadata", "E1_abs_diff", "E1_sparse")):
+                metadata = float(obj["meta"][metadata_col.replace("_metadata", "_exact")])
+                close(row[metadata_col], metadata, 0, f"{label} N={n} g={g}: {metadata_col}")
+                close(row[diff_col], abs(float(row[energy_col]) - metadata), 1e-12,
+                      f"{label} N={n} g={g}: {diff_col}")
+                require(float(row[diff_col]) <= 1e-9, f"{label} N={n} g={g}: official reference mismatch")
+        else:
+            require(row["E0_metadata"] == "NA" and row["E1_metadata"] == "NA" and
+                    row["E0_abs_diff"] == "NA" and row["E1_abs_diff"] == "NA",
+                    f"{label} N={n} g={g}: unchecked reference fields must be NA")
+    require(reference_count == 14, f"{label}: expected 14 N=4/6 official reference checks, got {reference_count}")
+
+    # Re-solve the sparse spectra and recompute the gap, entropy, and order diagnostic.
+    for n in FINITE_SIZES:
+        rng = np.random.default_rng(91000 + n)
+        matrix_seed = rng.normal(size=2**n)
+        for g in FINITE_G:
+            row = by_key[(n, g)]
+            hamiltonian = sim.tfim_hamiltonian(n, J=1.0, g=g, periodic=False)
+            matrix = hamiltonian.to_matrix(sparse=True).tocsr()
+            eigvals, eigvecs = eigsh(matrix, k=2, which="SA", tol=1e-12, maxiter=50000,
+                                     ncv=min(matrix.shape[0], 40), v0=matrix_seed.copy())
+            order = np.argsort(eigvals)
+            eigvals = np.asarray(eigvals[order], dtype=float)
+            ground = np.asarray(eigvecs[:, order[0]].real, dtype=float)
+            close(row["E0_sparse"], eigvals[0], 1e-9, f"{label} N={n} g={g}: recomputed E0")
+            close(row["E1_sparse"], eigvals[1], 1e-9, f"{label} N={n} g={g}: recomputed E1")
+            close(row["gap"], eigvals[1] - eigvals[0], 1e-9, f"{label} N={n} g={g}: recomputed gap")
+            state = Statevector(ground)
+            reduced = partial_trace(state, list(range(n // 2, n)))
+            eigenvalues = np.linalg.eigvalsh(np.asarray(reduced.data, dtype=complex)).real
+            eigenvalues = np.clip(eigenvalues, 0.0, None)
+            eigenvalues = eigenvalues[eigenvalues > 1e-14]
+            entropy = float(-np.sum(eigenvalues * np.log2(eigenvalues)))
+            observables = sim.expectations(state, sim.observable_ops(n))
+            close(row["half_chain_entropy_bits"], entropy, 2e-9, f"{label} N={n} g={g}: recomputed entropy")
+            close(row["mz2_over_N2"], observables["mz2"], 2e-9, f"{label} N={n} g={g}: recomputed Mz2/N2")
+
+    require(len(crossing_rows) == 4, f"results/additional/finite_size_crossings.csv: expected four adjacent-size crossings, got {len(crossing_rows)}")
+    expected_crossings = _independent_crossings(rows)
+    require(len(crossing_rows) == len(expected_crossings), "finite-size crossing table has unexpected crossing count")
+    for i, (row, expected) in enumerate(zip(crossing_rows, expected_crossings), start=2):
+        small, large, crossing, status = expected
+        require(row["scope"] == ADDITIONAL_SCOPE and row["quantity"] == "N times gap" and
+                int(row["N_small"]) == small and int(row["N_large"]) == large and row["status"] == status,
+                f"results/additional/finite_size_crossings.csv:{i}: crossing key/status mismatch")
+        if crossing == "NA":
+            require(row["g_crossing_linear_interpolation"] == "NA",
+                    f"results/additional/finite_size_crossings.csv:{i}: expected NA crossing")
+        else:
+            close(row["g_crossing_linear_interpolation"], crossing, 1e-10,
+                  f"results/additional/finite_size_crossings.csv:{i}: interpolated crossing")
+    return reference_count
+
+
+def validate_mitigation_research(tables: dict[str, list[dict[str, str]]]) -> int:
+    from src import run_mitigation_d as mitigation_script
+
+    rows = tables["mitigation_d_results.csv"]
+    label = "results/additional/mitigation_d_results.csv"
+    require(len(rows) == 15, f"{label}: expected 15 g/observable rows, got {len(rows)}")
+    by_key = require_unique(rows, lambda r: (float(r["g"]), r["observable"]), label)
+    expected_keys = {(g, observable) for g in MITIGATION_G for observable in MITIGATION_OBSERVABLES}
+    require(set(by_key) == expected_keys, f"{label}: incorrect g/observable coverage")
+    numeric = {"g", "layers", "seed", "ideal_selected_circuit_target", "p1_fixed", "p2_baseline", "p_readout_fixed", "shots_per_basis_per_scale", "bootstrap_replicates"}
+    for method in ("raw", "readout_corrected", "zne", "zne_readout_corrected"):
+        numeric.update({f"{method}_value", f"{method}_se", f"{method}_abs_error"})
+    require_finite_columns(rows, numeric, label)
+    selections = json.loads((ROOT / "results/raw/s1_noisy_selection.json").read_text(encoding="utf-8"))
+    raw_rows = read_csv(ROOT / "results/raw/s1_seed_runs.csv")[1]
+    raw_index = {(float(row["g"]), int(row["layers"]), int(row["seed"])): row for row in raw_rows}
+    expected_targets = {}
+    for g in MITIGATION_G:
+        selection = selections[f"{g:.1f}"]
+        layer, seed = int(selection["layers"]), int(selection["seed"])
+        raw = raw_index[(g, layer, seed)]
+        theta = np.asarray(selection["theta"], dtype=float)
+        require(np.allclose(theta, np.asarray(json.loads(raw["theta_json"]), dtype=float), atol=1e-12, rtol=0),
+                f"mitigation selection g={g}: saved parameters do not match selected official run")
+        circuit, params = sim.hva_ansatz(4, layer, zz_mode="rzz")
+        state = Statevector(circuit.assign_parameters(dict(zip(params, theta))))
+        expected_targets[g] = sim.expectations(state, sim.observable_ops(4))
+        expected_targets[g]["energy"] = float(np.real(
+            state.expectation_value(sim.tfim_hamiltonian(4, J=1.0, g=g, periodic=False))))
+    for (g, observable), row in by_key.items():
+        selection = selections[f"{g:.1f}"]
+        require(row["scope"] == ADDITIONAL_SCOPE and row["target_definition"] ==
+                "noiseless expectation of the same saved selected HVA parameters",
+                f"{label} g={g} {observable}: scope/target definition mismatch")
+        require(row["alpha_p2_scales"] == "1.0;1.5;2.0", f"{label} g={g} {observable}: p2 scale metadata mismatch")
+        close(row["layers"], int(selection["layers"]), 0, f"{label} g={g} {observable}: layers")
+        close(row["seed"], int(selection["seed"]), 0, f"{label} g={g} {observable}: seed")
+        close(row["ideal_selected_circuit_target"], expected_targets[g][observable], TOL,
+              f"{label} g={g} {observable}: target is not selected-circuit expectation")
+        close(row["p1_fixed"], mitigation_script.P1, 0, f"{label} g={g} {observable}: p1")
+        close(row["p2_baseline"], mitigation_script.P2, 0, f"{label} g={g} {observable}: p2")
+        close(row["p_readout_fixed"], mitigation_script.P_READOUT, 0, f"{label} g={g} {observable}: readout rate")
+        close(row["shots_per_basis_per_scale"], mitigation_script.SHOTS, 0, f"{label} g={g} {observable}: shots")
+        close(row["bootstrap_replicates"], mitigation_script.BOOTSTRAPS, 0, f"{label} g={g} {observable}: bootstrap count")
+        require("synthetic" in row["readout_calibration_model"].lower(),
+                f"{label} g={g} {observable}: calibration model is not labelled synthetic")
+        for method in ("raw", "readout_corrected", "zne", "zne_readout_corrected"):
+            error_column = f"{method}_abs_error"
+            value_column, se_column = f"{method}_value", f"{method}_se"
+            close(row[error_column], abs(float(row[value_column]) - float(row["ideal_selected_circuit_target"])), 1e-10,
+                  f"{label} g={g} {observable}: {error_column}")
+            require(float(row[se_column]) >= 0, f"{label} g={g} {observable}: negative {se_column}")
+
+    cost_rows = tables["mitigation_d_costs.csv"]
+    require(len(cost_rows) == 1, "results/additional/mitigation_d_costs.csv: expected one acquisition-cost row")
+    cost = cost_rows[0]
+    require(cost["scope"] == ADDITIONAL_SCOPE, "mitigation cost row has incorrect scope")
+    n_g, n_basis, n_scales, n_qubits = len(mitigation_script.GS), 2, len(mitigation_script.SCALES), 4
+    baseline_circuits = n_g * n_basis
+    extra_circuits = n_g * n_basis * (n_scales - 1)
+    calibration_circuits = 2 * n_qubits
+    expected_cost = {
+        "official_baseline_data_circuits_at_alpha_1": baseline_circuits,
+        "additional_p2_scale_data_circuits_at_alpha_1_5_and_2": extra_circuits,
+        "readout_calibration_circuits_reused": calibration_circuits,
+        "total_unique_data_circuits": baseline_circuits + extra_circuits,
+        "total_unique_circuits_including_calibration": baseline_circuits + extra_circuits + calibration_circuits,
+        "shots_per_circuit": mitigation_script.SHOTS,
+        "baseline_data_shots_at_alpha_1": baseline_circuits * mitigation_script.SHOTS,
+        "additional_shots_for_p2_scales": extra_circuits * mitigation_script.SHOTS,
+        "readout_calibration_shots": calibration_circuits * mitigation_script.SHOTS,
+        "total_data_and_calibration_shots": (baseline_circuits + extra_circuits + calibration_circuits) * mitigation_script.SHOTS,
+        "extra_circuits_vs_raw_alpha_1": extra_circuits + calibration_circuits,
+        "extra_shots_vs_raw_alpha_1": (extra_circuits + calibration_circuits) * mitigation_script.SHOTS,
+    }
+    require_finite_columns(cost_rows, set(expected_cost), "results/additional/mitigation_d_costs.csv")
+    for column, expected in expected_cost.items():
+        close(cost[column], expected, 0, f"results/additional/mitigation_d_costs.csv: {column}")
+    require("reused" in cost["calibration_reuse"].lower() and "p2" in cost["noise_settings"].lower(),
+            "mitigation cost row must disclose calibration reuse and p2 scaling")
+    return len(rows)
+
+
+def validate_additional_research() -> tuple[int, int, int, int]:
+    tables = _read_additional_tables()
+    n6_starts, n6_failures = validate_n6_research(tables)
+    finite_references = validate_finite_size_research(tables)
+    mitigation_rows = validate_mitigation_research(tables)
+    return n6_starts, n6_failures, finite_references, mitigation_rows
+
+
 def validate():
     source = ROOT / "handoff_payload/OFFICIAL_KIT"
     checked = verify_manifest()
@@ -528,6 +968,7 @@ def validate():
     validate_resources(tables["resources.csv"], raw_index, processor)
     validate_p2_processor_comparison(raw_index, processor, tables["resources.csv"])
     validate_noisy(tables["s1_noisy.csv"], raw, references, processor)
+    n6_starts, n6_failures, finite_references, mitigation_rows = validate_additional_research()
     # Preserve failed starts and their recorded termination reason; never filter them out.
     failed = [r for r in raw if str(r["success"]).lower() in {"false", "0"}]
     require(all(r["message"].strip() for r in failed),
@@ -535,7 +976,8 @@ def validate():
     # Required figures and documentation/handoff files.
     figures = ["phase_observables_vs_g.png", "layer_study_convergence.png", "bell_comparison.png",
                "processor_D_topology.png", "noisy_vs_ideal_energy.png", "criticality_gap_entropy.png", "p2_sensitivity.png",
-               "p2_processor_comparison.png"]
+               "p2_processor_comparison.png", "additional_n6_layer_study.png",
+               "additional_finite_size_scaling.png", "additional_mitigation_d.png"]
     for name in figures:
         require((ROOT / "results/figures" / name).is_file(), f"missing required/supplemental figure results/figures/{name}")
     docs = ["README.md", "report.md", "docs/report.md", "main.ipynb", "docs/STATUS.md", "docs/AUDIT_LOG.md",
@@ -566,8 +1008,8 @@ def validate():
         require(result.returncode == 0,
                 f"official Processor D checker failed for N={n}: {result.stdout}{result.stderr}")
         print(result.stdout.strip())
-    print(f"PASS: official manifest/work-copy hashes={checked}/25; schemas, raw uniqueness, aggregates, references, Bell, noise, resources, 36-row A/B/D p2 comparison, notebook, docs and D checks valid.")
-    print(f"PASS: raw seed starts={len(raw)}; retained non-converged starts={len(failed)}; noisy D rows={len(tables['s1_noisy.csv'])}; supplemental A/B/D p2 rows=36; no N=4 sweep run.")
+    print(f"PASS: official manifest/work-copy hashes={checked}/25; required tables, Bell/noise/resources, supplemental N=6/finite-size/mitigation data, figures, notebook, docs and D checks valid.")
+    print(f"PASS: N4 raw starts={len(raw)} (non-success={len(failed)}); N6 starts={n6_starts} (non-success={n6_failures}); finite-size rows=180 (official reference pairs={finite_references}); mitigation rows={mitigation_rows}; supplemental A/B/D p2 rows=36; no N=4 sweep run.")
 
 
 if __name__ == "__main__":

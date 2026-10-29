@@ -78,7 +78,7 @@ def main():
       for L in LAYERS:
         rr=[done[(g,L,s)] for s in SEEDS];win=min(rr,key=lambda x:float(x['energy']))
         ag.append({'N':6,'g':g,'layers':L,'best_seed':int(win['seed']),'best_energy':float(win['energy']),'exact_E0':float(win['exact_E0']),'energy_err':float(win['energy_err']),'fidelity':float(win['fidelity']),'fidelity_2':float(win['fidelity_2']),'mx':float(win['mx']),'mx_exact':ex['mx'],'czz_nn':float(win['czz_nn']),'czz_nn_exact':ex['czz_nn'],'mz2':float(win['mz2']),'mz2_exact':ex['mz2'],'mz':float(win['mz']),'optimizer_calls':int(win['optimizer_calls']),'n_params':int(win['n_params'])})
-        lr.append({'N':6,'g':g,'layers':L,'best_seed':int(win['seed']),'best_energy':float(win['energy']),'energy_err':float(win['energy_err']),'abs_energy_err':abs(float(win['energy_err'])),'any_seed_success':any(bool(r['success']) for r in rr),'optimizer_calls_winner':int(win['optimizer_calls'])})
+        lr.append({'N':6,'g':g,'layers':L,'best_seed':int(win['seed']),'best_energy':float(win['energy']),'energy_err':float(win['energy_err']),'abs_energy_err':abs(float(win['energy_err'])),'any_seed_success':any(str(r['success']).strip().lower() in ('true','1') for r in rr),'optimizer_calls_winner':int(win['optimizer_calls'])})
     write(AGG,list(ag[0]),ag);write(LAYER,list(lr[0]),lr)
     failed=[r for r in done.values() if str(r['success']).lower() not in ('true','1')]
     print(f'OPTIONAL N=6 sweep complete: raw={len(done)} aggregates={len(ag)} layer_rows={len(lr)} failed_starts_retained={len(failed)} total_optimizer_seconds={sum(float(r["runtime_seconds"]) for r in done.values()):.2f}',flush=True)
