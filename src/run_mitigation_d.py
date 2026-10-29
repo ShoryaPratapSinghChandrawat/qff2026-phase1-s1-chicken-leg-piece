@@ -313,7 +313,9 @@ def main() -> None:
                 ax.legend(fontsize=7)
     fig.suptitle("Additional, not part of the official required results — D readout correction and p2-only ZNE\n"
                  "Points are estimates; bars are bootstrap standard errors; noise is synthetic", fontsize=12)
-    fig.savefig(ROOT / "results/figures/additional_mitigation_d.png", dpi=300)
+    figure_dir = ROOT / "results/figures"
+    figure_dir.mkdir(parents=True, exist_ok=True)
+    fig.savefig(figure_dir / "additional_mitigation_d.png", dpi=300)
     plt.close(fig)
     print(f"MITIGATION_COSTS: baseline data {baseline_circuits} circuits/{baseline_shots} shots; "
           f"ZNE extra {zne_extra_circuits} circuits/{zne_extra_shots} shots; "

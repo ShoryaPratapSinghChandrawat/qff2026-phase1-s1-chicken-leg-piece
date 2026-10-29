@@ -36,6 +36,8 @@ The verifier checks the embedded official manifest and hashes, schemas and numer
 
 The commands that regenerate results are intentionally separate: `src/run_s1.py` launches all 84 optimizer starts; `src/run_bell.py` reruns Bell measurements; `src/finish_stage_b.py` regenerates required noise/resources; and scripts in `src/` regenerate supplemental results. Leave `RECOMPUTE=False` for a saved-output review.
 
+For convenience, activate `.venv` and run `make test`, `make verify`, or `make notebook`. The CI workflow at `.github/workflows/ci.yml` checks dependency consistency, the test suite, and the submission verifier on Python 3.11 and 3.13.
+
 ## Research extensions
 
 - `results/additional/p2_sensitivity.csv` and `results/figures/p2_sensitivity.png`: D-only hypothetical p2 multiplier sweep, with `p1=0.001` and `p_readout=0.01` held fixed.

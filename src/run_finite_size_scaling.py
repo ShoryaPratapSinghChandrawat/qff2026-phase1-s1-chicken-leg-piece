@@ -46,7 +46,11 @@ def sparse_low_energy(H, n: int, g: float):
                        ncv=min(matrix.shape[0], 40), v0=v0)
     order = np.argsort(vals)
     vals = np.asarray(vals[order], dtype=float)
-    vecs = np.asarray(vecs[:, order], dtype=float)
+    vecs = vecs[:, order]
+    imag_max = float(np.max(np.abs(vecs.imag)))
+    if imag_max > 1e-12:
+        raise RuntimeError(f"eigsh eigenvectors have non-negligible imaginary part for N={n}, g={g}: {imag_max}")
+    vecs = np.asarray(vecs.real, dtype=float)
     # Normalize signs for reproducible serialized calculations. Observables do
     # not depend on this convention, but it stabilizes diagnostics.
     for j in range(vecs.shape[1]):

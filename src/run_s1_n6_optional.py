@@ -27,6 +27,12 @@ AGG=OUT/'s1_n6_results.csv'
 LAYER=OUT/'s1_n6_layer_study.csv'
 RAW_COLS=['N','g','layers','seed','energy','exact_E0','exact_E1','energy_err','fidelity','fidelity_2','mx','czz_nn','mz2','mz','optimizer_calls','n_params','success','status','message','runtime_seconds','theta_json']
 
+def minimal_threshold_layer(layer_rows, g, threshold=1e-3):
+    """Return the smallest tested layer with a strict absolute-error threshold hit."""
+    passing = [int(row['layers']) for row in layer_rows
+               if float(row['g']) == float(g) and abs(float(row['energy_err'])) < threshold]
+    return min(passing) if passing else None
+
 def write(path, cols, rows):
     with path.open('w',newline='',encoding='utf-8') as f:
         w=csv.DictWriter(f,fieldnames=cols,lineterminator='\n');w.writeheader();w.writerows(rows)
@@ -82,9 +88,9 @@ def main():
     p_d=sim.load_processor(str(ROOT/'processors/processor_D.json'))
     for g in GS:
         layer_rows=[r for r in lr if float(r['g'])==g]
-        passing=[r for r in layer_rows if float(r['abs_energy_err'])<1e-3]
-        if passing:
-            chosen_layer=min(int(r['layers']) for r in passing)
+        chosen_layer=minimal_threshold_layer(layer_rows,g)
+        passing=[r for r in layer_rows if float(r['g'])==g and float(r['abs_energy_err'])<1e-3]
+        if chosen_layer is not None:
             candidates=[done[(g,chosen_layer,seed)] for seed in SEEDS]
             winner=min(candidates,key=lambda r:float(r['energy']))
             role='first_threshold_layer'
