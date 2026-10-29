@@ -1,0 +1,13 @@
+g,layers,seed,alpha_p2,p1,p2,p_readout,energy_noisy,energy_error_noisy,fidelity_noisy_dm,two_q_on_D,depth_on_D,swaps_on_D,routing_overhead_2q,synthetic_model
+0.5,4,0,1.0,0.001,0.005,0.01,-3.1273562124327743,0.2996778764753052,0.8924490388704343,12,31,0,0,hypothetical two-qubit error-rate sensitivity; not measured crosstalk
+0.5,4,0,1.25,0.001,0.00625,0.01,-3.092481497961819,0.33455259094626033,0.8811037314453567,12,31,0,0,hypothetical two-qubit error-rate sensitivity; not measured crosstalk
+0.5,4,0,1.5,0.001,0.0075,0.01,-3.0579682646928426,0.3690658242152369,0.8699025192119052,12,31,0,0,hypothetical two-qubit error-rate sensitivity; not measured crosstalk
+0.5,4,0,2.0,0.001,0.01,0.01,-2.9900124654100897,0.4370216234979898,0.84792567020612,12,31,0,0,hypothetical two-qubit error-rate sensitivity; not measured crosstalk
+1.0,3,2,1.0,0.001,0.005,0.01,-4.493047893134129,0.2657225900095064,0.923127916816458,9,24,0,0,hypothetical two-qubit error-rate sensitivity; not measured crosstalk
+1.0,3,2,1.25,0.001,0.00625,0.01,-4.460327652643847,0.2984428304997886,0.9147438846715947,9,24,0,0,hypothetical two-qubit error-rate sensitivity; not measured crosstalk
+1.0,3,2,1.5,0.001,0.0075,0.01,-4.427820473271726,0.33095000987190915,0.9064346383343622,9,24,0,0,hypothetical two-qubit error-rate sensitivity; not measured crosstalk
+1.0,3,2,2.0,0.001,0.01,0.01,-4.363440421528006,0.39533006161562945,0.8900381151149086,9,24,0,0,hypothetical two-qubit error-rate sensitivity; not measured crosstalk
+2.0,3,2,1.0,0.001,0.005,0.01,-7.841449609338626,0.5353490275117343,0.9192666369318787,9,24,0,0,hypothetical two-qubit error-rate sensitivity; not measured crosstalk
+2.0,3,2,1.25,0.001,0.00625,0.01,-7.777592599469186,0.5992060373811743,0.9105804723533155,9,24,0,0,hypothetical two-qubit error-rate sensitivity; not measured crosstalk
+2.0,3,2,1.5,0.001,0.0075,0.01,-7.714203665133814,0.6625949717165458,0.9019739676211336,9,24,0,0,hypothetical two-qubit error-rate sensitivity; not measured crosstalk
+2.0,3,2,2.0,0.001,0.01,0.01,-7.588817822447047,0.7879808144033129,0.8849973480538793,9,24,0,0,hypothetical two-qubit error-rate sensitivity; not measured crosstalk
