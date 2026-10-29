@@ -121,3 +121,17 @@ With this extension, all seven locked TFIM fields now meet the strict $|\Delta E
 - $g=2.00$: $L=4$ (err $+5.47 \times 10^{-4}$, `success=True`)
 
 All derived tables (`s1_n6_results.csv`, `s1_n6_layer_study.csv`, `s1_n6_minimal_layers.csv`, `s1_n6_resources.csv`), the 300-DPI plot `results/figures/additional_n6_layer_study.png`, `verify_submission.py`, and `tests/test_verifier.py` have been synchronized. CI workflows were updated to modern actions (`actions/checkout@v4` and `actions/setup-python@v5`). Full verification and pytest (23/23 tests) pass cleanly.
+
+
+## Final polish pass and teammate alignment (2026-10-30; branch `polish`)
+
+A comprehensive comparative audit was conducted between this repository and teammate Arhaan Sethi's reference repository (`https://github.com/arhaansethi890-tech/hackathon-project-qiskit`, audited in `../ARHAAN_AUDIT.md`). Both repositories share the identical minimal layer counts across all seven transverse field values ($L_{\min} = 4, 4, 4, 3, 4, 3, 3$), confirming solid algorithmic alignment.
+
+Structural presentation improvements and reviewer navigational aids were adapted from teammate Arhaan Sethi's repo and implemented using our own verified CSV data:
+- Added a 60-second reviewer path and an Objective 1–5 deliverable crosswalk table to `README.md`.
+- Added a physical context section in `report.md` ("Why the Ising model matters in real life").
+- Implemented `src/make_seed_table.py` and generated `docs/SEED_STABILITY.md` analyzing seed spread across the seven fields.
+- Added `docs/PRESENTATION_PITCH.md` containing a 5-minute presentation script and 12 viva Q&As with exact numbers cited from our primary CSVs.
+- Created `docs/INDEX.md` as a single master directory table of contents.
+- Documented the architectural trade-off regarding Processor D: our submission uses the 7-edge chorded-ring design (hash `f050565e...`), whereas teammate Arhaan Sethi utilizes a 9-edge cycle with 3 chords (hash `dbde5c71...`).
+- AI disclosure updated to reflect Arena.ai Agent Mode, Codex, and Antigravity.

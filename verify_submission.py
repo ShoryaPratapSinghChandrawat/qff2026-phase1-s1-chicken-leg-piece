@@ -992,11 +992,15 @@ def validate():
     docs = ["README.md", "report.md", "docs/report.md", "main.ipynb", "docs/STATUS.md", "docs/AUDIT_LOG.md",
             "docs/NUMBER_AUDIT.md", "docs/VIVA_DEFENSE.md", "docs/DEMO_WALKTHROUGH.md",
             "docs/RESULTS_AT_GLANCE.md", "docs/JUDGE_QA.md", "docs/FINAL_RUBRIC_MATRIX.md",
-            "docs/AUDIT_BASELINE.sha256", "reference/PHASE1_BASELINE_README.md"]
+            "docs/AUDIT_BASELINE.sha256", "reference/PHASE1_BASELINE_README.md",
+            "docs/INDEX.md", "docs/PRESENTATION_PITCH.md", "docs/SEED_STABILITY.md", "AI_DISCLOSURE.md"]
     for name in docs:
         require((ROOT / name).is_file(), f"missing required deliverable: {name}")
     require((ROOT / "report.md").read_bytes() == (ROOT / "docs/report.md").read_bytes(),
             "report.md and docs/report.md must be identical")
+    seed_md = (ROOT / "docs/SEED_STABILITY.md").read_text(encoding="utf-8")
+    for g_val in ("0.25", "0.50", "0.75", "1.00", "1.25", "1.50", "2.00"):
+        require(g_val in seed_md, f"docs/SEED_STABILITY.md: missing field {g_val}")
     for name in ("README.md", "docs/DEMO_WALKTHROUGH.md"):
         text = (ROOT / name).read_text(encoding="utf-8")
         require(not re.search(r"(?:/home/user/|/Users/|[A-Za-z]:\\\\)", text),

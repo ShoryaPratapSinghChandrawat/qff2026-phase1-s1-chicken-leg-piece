@@ -17,6 +17,9 @@ Additional analyses, clearly separated from required results, include a same-par
 
 ## 2. Problem and method
 
+### Physical motivation: Why the Ising model matters in real life
+The one-dimensional transverse-field Ising model (TFIM) is a foundational paradigm in condensed matter physics and quantum statistical mechanics. In physical systems, it models magnetic ordering in anisotropic crystals, quantum annealing in spin glasses, and quantum phase transitions driven by quantum fluctuations at zero temperature rather than thermal fluctuations. The interaction term $-J \sum Z_i Z_{i+1}$ favors parallel spin alignment (ferromagnetic ordering), while the transverse field $-g \sum X_i$ induces quantum tunneling that disorients spins into a superposition along the X-axis (paramagnetism). At the quantum critical point ($g=J=1$ in the thermodynamic limit), the competition between these non-commuting terms generates long-range entanglement and divergent correlation lengths, making exact ground-state preparation challenging for low-depth quantum circuits. Despite its physical motivation, our study is evaluated on a synthetic, gate-level benchmark using simulated depolarizing noise rather than physical quantum hardware.
+
 The supplied instances define the open-chain Hamiltonian
 
 `H = -J Σ(i=0..N-2) Z_i Z_(i+1) - g Σ(i=0..N-1) X_i`, with `J=1`.
@@ -78,6 +81,21 @@ The best-of-three threshold pattern is empirical for this initialization and opt
 Across the L=4 selected states, transverse magnetization `mx` rises from 0.204 at g=0.25 to 0.952 at g=2.00. Nearest-neighbour `Czz_nn` falls from 0.965 to 0.252, and `mz2` falls from 0.967 to 0.372. The finite-size `mz` one-point expectation remains approximately zero in these symmetric finite-chain states; this does not imply that Z correlations vanish. The smooth changes are finite-size diagnostics, not a thermodynamic phase-transition estimate.
 
 ![N=4 observables](results/figures/phase_observables_vs_g.png)
+
+### Seed stability and initialization spread
+Per official competition rules, three initial parameter seeds (0, 1, 2) were evaluated for every layer configuration. Across all 7 field values at their minimal layer $L_{\min}$, 100% of starts completed without optimizer divergence, though non-convexity is observed near criticality:
+
+| Field $g$ | $L_{\min}$ | Starts passing ($/3$) | Best seed | Min energy error | Mean energy error | Std dev | Max energy error |
+|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| 0.25 | 4 | 1/3 | Seed 0 | 6.66e-15 | 1.00e-02 | 7.09e-03 | 1.50e-02 |
+| 0.50 | 4 | 1/3 | Seed 0 | 3.02e-13 | 5.76e-02 | 4.07e-02 | 8.64e-02 |
+| 0.75 | 4 | 2/3 | Seed 2 | 2.50e-13 | 9.80e-03 | 1.39e-02 | 2.94e-02 |
+| 1.00 | 3 | 1/3 | Seed 2 | 1.56e-04 | 1.34e-02 | 9.77e-03 | 2.35e-02 |
+| 1.25 | 4 | 3/3 | Seed 2 | 2.10e-13 | 4.19e-12 | 3.82e-12 | 9.35e-12 |
+| 1.50 | 3 | 1/3 | Seed 0 | 3.23e-04 | 2.38e-03 | 1.51e-03 | 3.88e-03 |
+| 2.00 | 3 | 2/3 | Seed 2 | 1.15e-04 | 6.52e-04 | 4.00e-04 | 1.07e-03 |
+
+At $g=1.00, L=3$, Seed 2 meets the threshold ($1.56 	imes 10^{-4}$), while Seeds 0 and 1 stall at $\sim 2 	imes 10^{-2}$. At $g=1.25, L=4$, all three seeds reach $< 10^{-11}$. See [docs/SEED_STABILITY.md](docs/SEED_STABILITY.md) for full per-seed logs and optimizer call counts.
 
 ## 6. Noisy S1 simulation and controlled p2 sensitivity
 
@@ -144,4 +162,4 @@ The official required noisy S1 table covers D; A/B comparisons and mitigation ar
 
 ## AI disclosure
 
-Arena.ai Agent Mode and Codex were used to inspect the supplied challenge materials, implement reproducibility and analysis code, execute simulations and validation checks, inspect generated outputs, and assist in drafting this technical report and documentation. The team (Swarup, Biswajit, Arhaan Sethi, and Shorya Pratap Singh Chandrawat) has reviewed the complete repository, validated all numerical results against primary evidence, and takes full responsibility for the contents, methodologies, and conclusions of this submission.
+Arena.ai Agent Mode, Codex, and Antigravity were used to inspect the supplied challenge materials, implement reproducibility and analysis code, execute simulations and validation checks, inspect generated outputs, and assist in drafting this technical report and documentation. The team (Swarup, Biswajit, Arhaan Sethi, and Shorya Pratap Singh Chandrawat) has reviewed the complete repository, validated all numerical results against primary evidence, and takes full responsibility for the contents, methodologies, and conclusions of this submission.

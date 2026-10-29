@@ -31,5 +31,6 @@ This ledger maps numeric statements in `README.md` and `report.md` to the source
 | Baseline synthetic error rates | `processors/processor_D.json`; official helper | D processor settings | p1=.001, p2=.005, p_readout=.01; equal p2 across CX/CZ/RZZ is a model assumption |
 | Official source integrity | `handoff_payload/OFFICIAL_KIT/MANIFEST.sha256`; `verify_submission.py` | all 25 entries | SHA-256; official `qff_sim.py` hash is `dd0305834f88164f01f9b2a17f7333eb48a966cb81951b1953eed0e218de4cfc` |
 | Report copies | `report.md`; `docs/report.md` | entire files | verifier requires byte-identical contents |
+| Seed consistency across all seven fields at minimal L | `results/raw/s1_seed_runs.csv`; `docs/SEED_STABILITY.md` | N=4, selected L_min, seeds 0,1,2 | Min, mean, std, max energy error; 100% completion; critical g=1.00 seed spread |
 
 Every displayed figure is sourced from the corresponding CSVs above. Additional research files and plots are explicitly outside the official required results. The executed notebook prints row coverage and renders the required and supplemental plots; it uses saved data by default. `make regenerate-stage-b` is the documented complete Stage B noise/resource regeneration sequence and runs the verifier after both resource-producing scripts.

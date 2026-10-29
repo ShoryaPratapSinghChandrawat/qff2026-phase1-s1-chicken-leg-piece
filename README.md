@@ -2,9 +2,28 @@
 
 **Team:** Swarup · Biswajit · Arhaan Sethi · Shorya Pratap Singh Chandrawat<br>
 **Problem:** PS-S1, the open-chain transverse-field Ising ground-state simulation.<br>
-**Phase 1 repository:** [qff2026-phase1-s1-chicken-leg-piece](https://github.com/ShoryaPratapSinghChandrawat/qff2026-phase1-s1-chicken-leg-piece)
+**Phase 1 repository:** [qff2026-phase1-s1-chicken-leg-piece](https://github.com/ShoryaPratapSinghChandrawat/qff2026-phase1-s1-chicken-leg-piece)<br>
+**Phase 1 submission files:** Complete Phase 1 code, data, and artifacts are preserved in [`phase1/`](phase1/).
 
 This release contains the Phase 2 PS-S1 implementation, saved evidence, reproducibility checks, and research extensions. The official Phase 2 inputs and simulator remain preserved in `handoff_payload/OFFICIAL_KIT/`; `qff_sim.py` and `starter/qff_sim.py` match the official SHA-256 `dd0305834f88164f01f9b2a17f7333eb48a966cb81951b1953eed0e218de4cfc`.
+
+## 60-second reviewer path
+
+- **1. Open Notebook:** Run `jupyter notebook main.ipynb` (opens in < 5 seconds; defaults to `RECOMPUTE=False` to inspect saved tables, convergence curves, and figures).
+- **2. Review Primary Results:** Check `results/tables/s1_results.csv` ($N=4$ HVA minimal layer convergence across all 7 fields) and read [report.md](report.md).
+- **3. Validate Processor D:** Run `python tools/check_processor_d.py processors/processor_D.json 6` (passes all official connectivity and capacity rules).
+- **4. Run Automated Test & Verifier:** Execute `python verify_submission.py && python -m pytest -q` (validates all official hashes, schemas, and 23 tests in < 15 seconds).
+- **5. Explore Extensions:** Inspect optional $N=6$ convergence in `results/additional/s1_n6_results.csv`, finite-size scaling in `results/figures/additional_finite_size_scaling.png`, and seed consistency in [docs/SEED_STABILITY.md](docs/SEED_STABILITY.md).
+
+## Hackathon Objectives 1–5 Crosswalk
+
+| Objective | Focus | Key Deliverable & Evidence Files | Verified Status |
+|:---|:---|:---|:---:|
+| **Objective 1** | Problem Formulation & Exact Reference | `data/s1/` (locked JSON instances), `results/tables/s1_exact_reference.csv`, `main.ipynb` (Sec 1) | **100% Match** ($|\Delta E| < 10^{-9}$) |
+| **Objective 2** | VQE Implementation & Layer Study | `src/run_s1.py`, `results/tables/s1_results.csv`, `results/tables/layer_study.csv`, `results/figures/layer_study_convergence.png` | **100% Converged** ($L_{\min}=3,4; |\Delta E| < 6 \times 10^{-13}$) |
+| **Objective 3** | Processor D Architecture & Resource Analysis | `processors/processor_D.json`, `tools/check_processor_d.py`, `results/tables/resources.csv`, `results/figures/processor_D_topology.png` | **50% 2Q Gate Reduction** (18 $\to$ 9 gates) |
+| **Objective 4** | Noise Simulation & Common Bell Benchmark | `results/tables/bell.csv`, `results/tables/s1_noisy.csv`, `results/figures/bell_comparison.png`, `results/figures/noisy_vs_ideal_energy.png` | **Audited Error Bars** ($0.9598 \pm 0.0022$ direct) |
+| **Objective 5** | Extended Research & Methodological Honesty | `results/additional/` ($N=6$, finite-size $N \le 12$, ZNE mitigation, $p_2$ sensitivity), `verify_submission.py` | **Fully Preserved** (All failures flagged) |
 
 ## Results at a glance
 
@@ -52,4 +71,4 @@ All noise and mitigation results use a synthetic model; Processor D is not calib
 
 ## AI disclosure
 
-Arena.ai Agent Mode and Codex were used to inspect the supplied challenge materials, implement reproducibility and analysis code, execute simulations and validation checks, inspect generated outputs, and assist in drafting this documentation and report. The team (Swarup, Biswajit, Arhaan Sethi, and Shorya Pratap Singh Chandrawat) has reviewed the complete repository, validated all numerical results against primary evidence, and takes full responsibility for the contents of this submission.
+Arena.ai Agent Mode, Codex, and Antigravity were used to inspect the supplied challenge materials, implement reproducibility and analysis code, execute simulations and validation checks, inspect generated outputs, and assist in drafting this documentation and report. The team (Swarup, Biswajit, Arhaan Sethi, and Shorya Pratap Singh Chandrawat) has reviewed the complete repository, validated all numerical results against primary evidence, and takes full responsibility for the contents of this submission.
