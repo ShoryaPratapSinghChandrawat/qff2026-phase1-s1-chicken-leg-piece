@@ -159,3 +159,22 @@ The clean release package was extracted from the user-supplied workspace zip to 
 - Python 3.11.9 (temporary environment installed from `requirements-local-lock.txt`): focused tests `15 passed in 2.15s`; full pytest `23 passed in 15.62s`; direct verifier exited 0; `pip check` reported no broken requirements.
 - Notebook check ran `mingw32-make notebook` in a disposable copy with `RECOMPUTE=False`: four executed code cells, 11 inline PNG outputs, zero cell errors. Direct Processor D checks at 4 and 6 each printed `OK - Processor D satisfies all design rules.` The official kit manifest passed 25/25; both simulator copies matched SHA-256 `dd0305834f88164f01f9b2a17f7333eb48a966cb81951b1953eed0e218de4cfc`. `git diff --exit-code HEAD -- qff_sim.py starter tools handoff_payload data processors/processor_D.json results/tables` exited 0.
 - `compileall` and `git diff --check` passed. No formatter configuration or separate `release-package/` directory/verifier is present. After the audit log and synchronized report were finalized, the root `RELEASE_MANIFEST.sha256` was regenerated for 123 tracked files (excluding itself); verification found zero missing, extra, duplicate, or mismatched-hash entries. No external submission or hardware execution is claimed.
+
+## Final completion pass and repository freeze (2026-10-30; branch `final`)
+
+- **Branch and baseline:** Working on dedicated branch `final` (branched from `crazy` at `7445f4346d8c5ab880ca1f52b8d7926b139b963a`). Phase C commit `0b1e1be` remains an unbroken ancestor.
+- **Phase 1 (N=6 Extension):** Extended variational layers to L=9..12 exclusively for critical fields $g \in \{0.50, 0.75, 1.00\}$ with locked seeds 0, 1, 2 using the identical optimizer settings (`OPTIONS = {"maxiter":250,"maxfun":30000,"ftol":1e-12,"gtol":1e-7}`). All 36 starts completed in 17.6 minutes wall time via `src/run_s1_n6_extend.py`. Total raw starts expanded from 168 to 204 in `results/additional/s1_n6_seed_runs.csv`, preserving all 88 optimizer non-success flags. All derived tables (`s1_n6_results.csv`, `s1_n6_layer_study.csv`, `s1_n6_minimal_layers.csv`, `s1_n6_resources.csv`) and the 300-DPI figure `results/figures/additional_n6_layer_study.png` were regenerated. All seven fields now meet the strict $|\Delta E| < 10^{-3}$ threshold: L=4 for g=2.0; L=5 for 1.5; L=8 for g=0.25, 1.25; L=9 for g=0.50, 0.75; and L=10 for g=1.00.
+- **Phase 2 (CI Workflow):** Updated `.github/workflows/ci.yml` to use `actions/checkout@v4` and `actions/setup-python@v5`. Preserved the dual Python 3.11 and 3.13 matrix.
+- **Phase 3 (Full Audit):**
+  - Official embedded kit manifest verified 25/25 files (all hashes match).
+  - Both Processor D checks (`tools/check_processor_d.py` 4 and 6) passed with exit code 0.
+  - Pytest full suite: 23 passed in 15.14s (exit 0).
+  - Submission verifier (`verify_submission.py`): exited 0 with full pass across all required tables, Bell, noisy D, resources, supplemental N=6 (204 starts), finite-size (180 rows), mitigation (15 rows), figures, notebook, and documentation.
+  - Jupyter notebook (`main.ipynb`): executed in-place via nbconvert (`RECOMPUTE=False`) in 7.6s with zero errors.
+  - Sparse diagonalization recomputation: independently recomputed exact E0, E1, mx, czz_nn, mz2, mz for N=4 and N=6; all match within 1e-9 tolerance.
+  - Bell recomputation: verified XX, YY, ZZ, fidelity, and standard errors against official formulas with machine-precision agreement.
+  - Schemas and row counts: verified column names, column order, and row counts against `templates/results_columns.md`.
+  - Number audit: checked numeric claims against primary CSVs; updated `docs/NUMBER_AUDIT.md`, `docs/RESULTS_AT_GLANCE.md`, `docs/STATUS.md`, `docs/FINAL_RUBRIC_MATRIX.md`, `docs/JUDGE_QA.md`, and `docs/VIVA_DEFENSE.md`.
+  - Hygiene: zero tracked `__pycache__` or `.venv`, zero `TODO`/`FIXME` markers, zero user absolute paths, requirements pins verified.
+  - Documentation and AI disclosure: `report.md` (2,517 words, ~5 pages) and `docs/report.md` are byte-identical; AI disclosure explicitly includes team review and responsibility statement; all four team members and Phase 1 repo URL verified in `README.md`.
+- **Phase 4 (Manifest & Freeze):** Regenerated `RELEASE_MANIFEST.sha256` for all 124 tracked files (including `src/run_s1_n6_extend.py`). Line endings normalized per `.gitattributes` (`* -text`). Repository frozen on branch `final`. No merge to `main` and no remote push performed.

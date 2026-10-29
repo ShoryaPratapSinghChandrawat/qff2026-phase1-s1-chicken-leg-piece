@@ -106,3 +106,18 @@ This section supersedes earlier status notes above that describe the optional N=
 The corrected summary preserves all 56 optimizer non-success records and reports the strict threshold at L=8 for g=.25 and 1.25, L=5 for 1.5, and L=4 for 2.0; it is not reached by L=8 for .5, .75, or 1.0. The selected g=1.25 result remains at L=8 with absolute error 0.0008801149 and `success=False`. All seven Processor A/B/D capacity/resource rows remain recorded. The N=6 tier is still incomplete.
 
 The verifier now checks all supplemental N=6 files and selected-state observables, finite-size coverage and independent sparse-spectrum replay/reference/crossing consistency, and mitigation coverage/targets/errors/bootstrap metadata/circuit-shot accounting. Regression fixtures verify rejection of missing files, wrong counts, duplicate keys, non-finite values, and inconsistent mitigation errors. Final command results and checksum/commit closure are appended to `docs/AUDIT_LOG.md` after the full two-version validation.
+
+## Final freeze and N=6 extension completion (2026-10-30; branch `final`)
+
+On branch `final`, the optional N=6 layer study was extended for the three critical fields $g \in \{0.50, 0.75, 1.00\}$ from $L=9$ through $L=12$ across locked seeds 0, 1, 2 using the identical optimizer settings (`OPTIONS = {"maxiter":250,"maxfun":30000,"ftol":1e-12,"gtol":1e-7}`). This completes 36 additional starts, expanding `s1_n6_seed_runs.csv` to 204 unique starts (88 optimizer non-success flags preserved).
+
+With this extension, all seven locked TFIM fields now meet the strict $|\Delta E| < 10^{-3}$ energy error threshold:
+- $g=0.25$: $L=8$ (err $+6.93 \times 10^{-4}$, `success=True`)
+- $g=0.50$: $L=9$ (err $+8.35 \times 10^{-5}$, `success=False`; $L=10$ err $2.62 \times 10^{-11}$, `success=True`)
+- $g=0.75$: $L=9$ (err $+9.79 \times 10^{-4}$, `success=False`; $L=12$ err $1.00 \times 10^{-11}$, `success=True`)
+- $g=1.00$: $L=10$ (err $+3.13 \times 10^{-5}$, `success=False`; $L=12$ err $1.26 \times 10^{-7}$)
+- $g=1.25$: $L=8$ (err $+8.80 \times 10^{-4}$, `success=False`)
+- $g=1.50$: $L=5$ (err $+6.92 \times 10^{-4}$, `success=True`)
+- $g=2.00$: $L=4$ (err $+5.47 \times 10^{-4}$, `success=True`)
+
+All derived tables (`s1_n6_results.csv`, `s1_n6_layer_study.csv`, `s1_n6_minimal_layers.csv`, `s1_n6_resources.csv`), the 300-DPI plot `results/figures/additional_n6_layer_study.png`, `verify_submission.py`, and `tests/test_verifier.py` have been synchronized. CI workflows were updated to modern actions (`actions/checkout@v4` and `actions/setup-python@v5`). Full verification and pytest (23/23 tests) pass cleanly.
