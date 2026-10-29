@@ -1,7 +1,7 @@
 # AI Disclosure Statement
 
-**Project:** QFF 2026 Phase 2 — PS-S1 Quantum Simulation  
-**Team:** Chicken Leg Piece (Swarup, Biswajit, Arhaan Sethi, Shorya Pratap Singh Chandrawat)  
+**Project:** QFF 2026 Phase 2 — PS-S1 Quantum Simulation
+**Team:** Chicken Leg Piece (Swarup, Biswajit, Arhaan Sethi, Shorya Pratap Singh Chandrawat)
 
 ---
 
